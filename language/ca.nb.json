@@ -1,9 +1,0 @@
-{
-    "activate": {
-        "button": "Aktiver Cacheturassistenten"
-    },
-    "menu": {
-    	"addto": "Legg cacher i:"
-    },
-    "send": "Send til cachetur.no"
-}
