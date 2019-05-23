@@ -1,0 +1,9 @@
+{
+    "activate": {
+        "button": "Activate the Cachetur Assistant"
+    },
+    "menu": {
+    	"addto": "Add caches to:"
+    },
+    "send": "Send to cachetur.no"
+}
