@@ -1,0 +1,11 @@
+Options -Indexes
+
+<FilesMatch "\.(json)$">
+    Header always set Access-Control-Allow-Origin "*"
+    Header add Access-Control-Allow-Methods: "GET,POST,OPTIONS,HEAD"
+</FilesMatch>
+
+RewriteEngine On
+
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

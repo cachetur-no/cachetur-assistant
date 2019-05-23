@@ -32,6 +32,9 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
+// @require         https://unpkg.com/i18next/i18next.min.js
+// @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
+// @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
@@ -82,6 +85,25 @@ if(_ctPage === "gc_map_new") {
 }
 
 $(document).ready(function() {
+    i18next
+        .use(i18nextXHRBackend)
+        .use(i18nextBrowserLanguageDetector)
+        .init({
+          fallbackLng: 'en',
+          ns: ['ca'],
+          defaultNS: 'ca',
+          backend: {
+              loadPath: 'https://cachetur.no/monkey/language/{{ns}}.{{lng}}.json',
+              crossDomain: true
+            }
+        }, (err, t) => {
+            if (err) return console.log("Error occurred when loading language data", err);
+            console.log("Translation fetched successfully");
+            ctStart();
+        });
+});
+
+function ctStart() {
     let lastUse = GM_getValue("cachetur_last_action", 0);
     let timeSinceLastUse = (Date.now() - lastUse) / 1000;
     console.log("The Cachetur Assistant was last used " + timeSinceLastUse + " seconds ago");
@@ -97,7 +119,7 @@ $(document).ready(function() {
     } else {
         ctPreInit();
     }
-});
+}
 
 function ctPreInit() {
     console.log("Continuing init of Cacheturassistenten");
@@ -212,7 +234,7 @@ function ctInitInactive() {
     else if(_ctPage === "gc_geotour") GM_addStyle("#cachetur-header { padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; }");
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 12px; }");
 
-    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">Activate the Cachetur Assistant</a></li>');
+    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">'+i18next.t('activate.button')+'</a></li>');
 
     $("#cachetur-activate").click(function(e) {
         GM_setValue("cachetur_last_action", Date.now());
@@ -270,7 +292,7 @@ function ctCreateTripList() {
                 ".cachetur-map_marker_corrected { border: 1px solid #ffffff; background-color: greenyellow; } " +
                 ".cachetur-map_marker_dnf { border: 1px solid #ffffff; background-color: dodgerblue; } ");
 
-            ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" title="'+_ctGetLang('Innlogget på cachetur.no som:')+' ' + _ctCacheturUser + '" /> '+_ctGetLang('Legg cacher i:')+' </span><select id="cachetur-tur-valg">' + options + '</select><button id="cachetur-tur-open" class="cachetur-menu-button" type="button" title="'+_ctGetLang('Åpne på cachetur.no')+'"><img src="https://cachetur.no/api/img/arrow.png" style="height:16px;"/></button><button id="cachetur-tur-refresh" type="button" class="cachetur-menu-button" title="'+_ctGetLang('Oppfrisk data for tur fra cachetur.no')+'"><img src="https://cachetur.no/api/img/refresh.png" style="height:16px;"/></button><button id="cachetur-tur-add-ct-caches" type="button" class="cachetur-menu-button" title="'+_ctGetLang('Vis cacher fra cachetur.no på kartet')+'"><img src="https://cachetur.no/api/img/map.png" style="height:16px;"/></button><button id="cachetur-tur-fitbounds" class="cachetur-menu-button" type="button" title="'+_ctGetLang('Tilpass kart til rute')+'"><img src="https://cachetur.no/api/img/zoom.png" style="height:16px;"/></button> <span id="cachetur-tur-antall-container">(<span id="cachetur-tur-antall"></span>)</span></li>');
+            ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" title="'+_ctGetLang('Innlogget på cachetur.no som:')+' ' + _ctCacheturUser + '" /> '+i18next.t('menu.addto')+' </span><select id="cachetur-tur-valg">' + options + '</select><button id="cachetur-tur-open" class="cachetur-menu-button" type="button" title="'+_ctGetLang('Åpne på cachetur.no')+'"><img src="https://cachetur.no/api/img/arrow.png" style="height:16px;"/></button><button id="cachetur-tur-refresh" type="button" class="cachetur-menu-button" title="'+_ctGetLang('Oppfrisk data for tur fra cachetur.no')+'"><img src="https://cachetur.no/api/img/refresh.png" style="height:16px;"/></button><button id="cachetur-tur-add-ct-caches" type="button" class="cachetur-menu-button" title="'+_ctGetLang('Vis cacher fra cachetur.no på kartet')+'"><img src="https://cachetur.no/api/img/map.png" style="height:16px;"/></button><button id="cachetur-tur-fitbounds" class="cachetur-menu-button" type="button" title="'+_ctGetLang('Tilpass kart til rute')+'"><img src="https://cachetur.no/api/img/zoom.png" style="height:16px;"/></button> <span id="cachetur-tur-antall-container">(<span id="cachetur-tur-antall"></span>)</span></li>');
 
             let tripSelector = $("#cachetur-tur-valg");
             let storedTrip = GM_getValue("cachetur_selected_trip", 0);
@@ -595,7 +617,7 @@ function ctWatchNewMap() {
 
         let cacheId = parseInt(document.getElementsByClassName("more-info-link")[0].getAttribute("data-id"));
 
-        let content = '<a class="cachetur-add-code" style="cursor: pointer;" data-code="' + cacheCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+_ctGetLang('Send til cachetur.no')+'</a>';
+        let content = '<a class="cachetur-add-code" style="cursor: pointer;" data-code="' + cacheCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
         //ctUpdateAddImage();
     };
 
@@ -623,7 +645,7 @@ function ctWatchNewMap() {
                 if(_ctPage === "gc_geocache") {
                     img.addClass("cachetur-add-code-error");
                 } else if(_ctPage === "gc_map") {
-                    img.html('<img src="https://cachetur.no/api/img/cachetur-15-error.png" /> ' + _ctGetLang('Send til cachetur.no'));
+                    img.html('<img src="https://cachetur.no/api/img/cachetur-15-error.png" /> ' + i18next.t('send'));
                 } else {
                     img.attr("src", "https://cachetur.no/api/img/cachetur-15-error.png");
                 }
@@ -1165,7 +1187,6 @@ function ctFixNewGcMapIssues() {
 }
 
 let langMap = {
-    "Legg cacher i:": "Add caches to:",
     "Innlogget på cachetur.no som:": "Signed in on cachetur.no as:",
     "Åpne på cachetur.no": "Open on cachetur.no",
     "Oppfrisk data for tur fra cachetur.no": "Refresh data from cachetur.no",
