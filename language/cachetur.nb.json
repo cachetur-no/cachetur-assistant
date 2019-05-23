@@ -1,0 +1,45 @@
+{
+    "activate": {
+        "button": "Aktiver Cacheturassistenten"
+    },
+    "menu": {
+    	"addto": "Legg cacher i:",
+    	"loggedinas": "Innlogget på cachetur.no som:",
+    	"notloggedin": "Du er ikke innlogget på cachetur.no",
+    	"deactivated": "Cacheturassistenten er derfor deaktivert",
+    	"opentrip": "Åpne på cachetur.no",
+    	"refresh": "Oppfrisk data for tur fra cachetur.no",
+    	"showonmap": "Vis cacher fra cachetur.no på kartet",
+    	"fitroute": "Tilpass kart til rute"
+    },
+    "send": "Send til cachetur.no",
+    "sent": "Lagt til på cachetur.no",
+    "comments": {
+    	"add": "Legg til kommentar",
+    	"description": "Skriv inn kommentaren du ønsker å legge til",
+    	"saved": "Kommentar lagret",
+    	"error": "En feil oppstod under lagring av kommentar"
+    },
+    "priority": {
+    	"priority": "Prioritet",
+    	"set1" : "Sett prioritet 1",
+    	"set2" : "Sett prioritet 2",
+    	"set3" : "Sett prioritet 3",
+    	"setnone": "Sett ingen prioritet",
+    	"saved": "Prioritet lagret",
+    	"error": "En feil oppstod under lagring av prioritet"
+    },
+    "foundby": "Funnet av:",
+    "vgps": {
+    	"sendmarked": "Send markerte til cachetur.no",
+    	"markfromtrip": "Marker cacher i turen",
+    	"sent": "Cachene er sendt til cachetur.no",
+    	"error": "Noe gikk galt under sending til cachetur.no"
+    },
+    "template": {
+    	"by": "av"
+    },
+    "alerts": {
+    	"browsemap": "Bruk browse-kartet for å legge til cacher rett fra kartet"
+    }
+}
