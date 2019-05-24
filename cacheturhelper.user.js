@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.2.0.1
+// @version         3.2.0.2
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -164,7 +164,7 @@ function ctPreInit() {
 function ctCheckLogin() {
     _ctCacheturUser = ctApiCall("user_get_current", "", function(data) {
         _ctCacheturUser = data.username;
-        _ctLanguage = data.language.substr(0,2);
+        _ctLanguage = data.language;
         i18next.changeLanguage(_ctLanguage);
 
         if (_ctCacheturUser === undefined || _ctCacheturUser === '') {

@@ -3,7 +3,7 @@
     "button": "Cachetur Assistenten aktivieren"
   },
   "menu": {
-    "addto": "Caches hinzufügen zu:",
+    "addto": "Cache hinzufügen zu:",
     "loggedinas": "Auf cachetur.no eingeloggt als:",
     "notloggedin": "Du bist auf cachetur.no nicht angemeldet",
     "deactivated": "Der Cacheturassistent ist deaktiviert",
@@ -40,6 +40,6 @@
     "by": "von"
   },
   "alerts": {
-    "browsemap": "Wähle \"Karte durchsuchen\" um Caches aus der Karte hinzuzufügen"
+    "browsemap": "Wähle \"Geocaches durchsuchen\" um Caches aus der Karte hinzuzufügen"
   }
 }
