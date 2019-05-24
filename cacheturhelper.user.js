@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.2.0.2
+// @version         3.2.0.3
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -93,7 +93,7 @@ function loadTranslations() {
         .use(i18nextXHRBackend)
         .use(i18nextBrowserLanguageDetector)
         .init({
-          fallbackLng: 'en',
+          fallbackLng: 'en-US',
           ns: ['cachetur'],
           defaultNS: 'cachetur',
           backend: {
@@ -103,11 +103,7 @@ function loadTranslations() {
         }, (err, t) => {
             if(err) {
                 if(err.indexOf("failed parsing" > -1)) {
-                    if(i18next.language.indexOf("-") > -1) {
-                        i18next.changeLanguage(i18next.language.substr(0,2));
-                    } else {
-                        i18next.changeLanguage('en');    
-                    }
+                    i18next.changeLanguage('en-US');
                     
                     return loadTranslations();
                 }
