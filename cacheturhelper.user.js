@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.2.0.0
+// @version         3.2.0.1
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -85,6 +85,10 @@ if(_ctPage === "gc_map_new") {
 }
 
 $(document).ready(function() {
+    loadTranslations();
+});
+
+function loadTranslations() {
     i18next
         .use(i18nextXHRBackend)
         .use(i18nextBrowserLanguageDetector)
@@ -97,11 +101,23 @@ $(document).ready(function() {
               crossDomain: true
             }
         }, (err, t) => {
-            if (err) return console.log("Error occurred when loading language data", err);
+            if(err) {
+                if(err.indexOf("failed parsing" > -1)) {
+                    if(i18next.language.indexOf("-") > -1) {
+                        i18next.changeLanguage(i18next.language.substr(0,2));
+                    } else {
+                        i18next.changeLanguage('en');    
+                    }
+                    
+                    return loadTranslations();
+                }
+                return console.log("Error occurred when loading language data", err);
+            }
+
             console.log("Translation fetched successfully");
             ctStart();
         });
-});
+}
 
 function ctStart() {
     let lastUse = GM_getValue("cachetur_last_action", 0);
