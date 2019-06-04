@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.2.0.3
+// @version         3.2.0.4
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -32,7 +32,7 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next/i18next.min.js
+// @require         https://unpkg.com/i18next@15.1.3/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
 // @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
