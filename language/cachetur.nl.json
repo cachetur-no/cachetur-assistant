@@ -1,0 +1,45 @@
+{
+  "activate": {
+    "button": "Activeer de Cachetur Assistent"
+  },
+  "menu": {
+    "addto": "Voeg caches toe:",
+    "loggedinas": "Op cachetur.no ingelogd als:",
+    "notloggedin": "U bent niet ingelogged op cachetur.no",
+    "deactivated": "De Cachetur Assistent is gedeactiveert",
+    "opentrip": "Open op cachetur.no",
+    "refresh": "Gegevens vernieuwen van cachetur.no",
+    "showonmap": "Laat caches van cachetur.no zien op de kaart",
+    "fitroute": "Zoom in om de route aan te passen"
+  },
+  "send": "Stuur naar cachetur.no",
+  "sent": "Verzonden naar cachetur.no",
+  "comments": {
+    "add": "Voeg commentaar toe",
+    "description": "Voer commentaar in (toevoegd aan allerede aanwezige reacties)",
+    "saved": "Reactie toegezonden naar cachetur.no",
+    "error": "En fout is ontstaan tijdens het zenden van een opmerking naar cachetur.no"
+  },
+  "priority": {
+    "priority": "Prioriteit",
+    "set1": "Stel prioriteit 1 in",
+    "set2": "Stel prioriteit 2 in",
+    "set3": "Stel prioriteit 3 in",
+    "setnone": "Stel geen prioriteit in",
+    "saved": "Prioriteit saved",
+    "error": "Er is een fout opgetreden tijdens het zenden van de prioriteit naar cachetur.no"
+  },
+  "foundby": "Gevonden door:",
+  "vgps": {
+    "sendmarked": "Stuur geselecteerd naar naar cachetur.no",
+    "markfromtrip": "Markeer caches in de toer ",
+    "sent": "De geselecteerde caches zijn verzonden naar cachetur.no ",
+    "error": "Er is iets misgegaan tijdens het verzenden van de geselecteerde caches naar cachetur.no"
+  },
+  "template": {
+    "by": "door"
+  },
+  "alerts": {
+    "browsemap": "Selecteer browse map om caches van de kaart te kunnen toevoegen"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "activate": {
+    "button": "Aktivera Cachetur Assistenten"
+  },
+  "menu": {
+    "addto": "Lägg till cacher till:",
+    "loggedinas": "Inloggad på Cachetur.no som:",
+    "notloggedin": "Du är inte inloggad på Cachetur.no",
+    "deactivated": "Cachetur Assistenten har avaktiverats",
+    "opentrip": "Öppna med Cachetur.no",
+    "refresh": "Uppdatera data från Cachetur.no",
+    "showonmap": "Visa cacher från Cachetur.no på karta",
+    "fitroute": "Zomma för att anpassa till turen"
+  },
+  "send": "Skicka till Cachetur.no",
+  "sent": "Skickad till Cachetur.no",
+  "comments": {
+    "add": "Lägg till kommentar",
+    "description": "Ange kommentar (bifogad eventuella befintliga kommentarer)",
+    "saved": "Kommentar skickad till Cachetur.no",
+    "error": "Ett fel inträffade när kommentaren skickades till Cachetur.no"
+  },
+  "priority": {
+    "priority": "Prioritet",
+    "set1": "Sätt prio 1",
+    "set2": "Sätt prio 2",
+    "set3": "Sätt prio 3",
+    "setnone": "Sätt ingen prioritet",
+    "saved": "Prioritet sparad",
+    "error": "Ett fel inträffade när prioriteringen skickades till Cachetur.no"
+  },
+  "foundby": "Hittad av:",
+  "vgps": {
+    "sendmarked": "Skicka urvalet till Cachetur.no",
+    "markfromtrip": "Markera cacher på denna turen",
+    "sent": "Markerade cacher har skickats till Cachetur.no ",
+    "error": "Ett fel inträffade när markerade cacher skickades till Cachetur.no"
+  },
+  "template": {
+    "by": "av"
+  },
+  "alerts": {
+    "browsemap": "Välj bläddringskarta för att lägga till cacher från kartan"
+  }
+}

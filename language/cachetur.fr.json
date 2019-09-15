@@ -1,0 +1,45 @@
+{
+  "activate": {
+    "button": "Activer l'Assistant Cachetur"
+  },
+  "menu": {
+    "addto": "Ajouter des caches à :",
+    "loggedinas": "Connecté sur cachetur.no en tant que :",
+    "notloggedin": "Vous n'êtes pas connecté à cachetur.no",
+    "deactivated": "L'Assistant Cachetur a été désactivé",
+    "opentrip": "Ouvrir sur cachetur.no",
+    "refresh": "Rafraîchir les données cachetur.no",
+    "showonmap": "Montrer les caches de cachetur.no sur la carte",
+    "fitroute": "Zoomer sur l'itinéraire"
+  },
+  "send": "Envoyer à cachetur.no",
+  "sent": "Les données ont été envoyé à cachetur.no",
+  "comments": {
+    "add": "Ajouter un commentaire",
+    "description": "Entrer un commentaire (sera joint à tout commentaire existant)",
+    "saved": "Commentaire envoyé à cachetur.no",
+    "error": "Une erreur s'est produite lors de l'envoi du commentaire à cachetur.no"
+  },
+  "priority": {
+    "priority": "Priorité",
+    "set1": "Régler sur \"priorité 1\"",
+    "set2": "Régler sur \"priorité 2\"",
+    "set3": "Régler sur \"priorité 3\"",
+    "setnone": "Régler sur \"pas de priorité\"",
+    "saved": "Priorité sauvegardée",
+    "error": "Une erreur s'est produite lors de l'envoi de la priorité à cachetur.no"
+  },
+  "foundby": "Trouvée par :",
+  "vgps": {
+    "sendmarked": "Envoyer la sélection à cachetur.no",
+    "markfromtrip": "Marquer les caches dans le géoparcours",
+    "sent": "Les caches sélectionnées ont été envoyées à cachetur.no",
+    "error": "Un problème est survenue lors de l'envoi des caches sélectionnées à cachetur.no"
+  },
+  "template": {
+    "by": "par"
+  },
+  "alerts": {
+    "browsemap": "Sélectionnez \"parcourir la carte\" pour ajouter les caches depuis la carte"
+  }
+}
