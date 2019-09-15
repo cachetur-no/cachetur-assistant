@@ -1,0 +1,45 @@
+{
+  "activate": {
+    "button": "Aktivovat asistenta Cachetur"
+  },
+  "menu": {
+    "addto": "Přidat keš do:",
+    "loggedinas": "Přihlášen na adrese cachetur.no jako:",
+    "notloggedin": "Nejste přihlášeni do cachetur.no",
+    "deactivated": "Cachetur asistent byl deaktivován",
+    "opentrip": "Otevřít na cachetur.no",
+    "refresh": "Aktualizovat data z cachetur.no",
+    "showonmap": "Zobrazit keše z cachetur.no na mapě",
+    "fitroute": "Přiblížení pro zobrazení trasy"
+  },
+  "send": "Odeslat do cachetur.no",
+  "sent": "Odesláno do cachetur.no",
+  "comments": {
+    "add": "Přidat komentář",
+    "description": "Zadejte komentář, který chcete přidat",
+    "saved": "Komentář odeslán do cachetur.no",
+    "error": "Došlo k chybě při odesílání komentáře do cachetur.no"
+  },
+  "priority": {
+    "priority": "Priorita",
+    "set1": "Nastavit prioritu 1",
+    "set2": "Nastavit prioritu 2",
+    "set3": "Nastavit prioritu 3",
+    "setnone": "Bez priority",
+    "saved": "Priorita byla uložena",
+    "error": "Při ukládání priority došlo k chybě"
+  },
+  "foundby": "Nalezl:",
+  "vgps": {
+    "sendmarked": "Odeslat vybrané keše do cachetur.no",
+    "markfromtrip": "Označit si keše ve výletu",
+    "sent": "Vybrané keše byly odeslány do cachetur.no",
+    "error": "Při odesílání vybraných keší do cachetur.no se něco pokazilo"
+  },
+  "template": {
+    "by": "podle"
+  },
+  "alerts": {
+    "browsemap": "Chcete-li přidat keše z mapy, vyberte procházet mapu "
+  }
+}
