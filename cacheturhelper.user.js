@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.3.0.1
+// @version         3.3.0.2
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -274,7 +274,7 @@ function ctPrependToHeader(data) {
     let header;
     if(_ctPage === "gc_map") header = $('#uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_map_new") header = $('.profile-panel.user-nav ul');
-    else if(_ctPage === "gc_bmlist") header = $('.profile-widget');
+    else if(_ctPage === "gc_bmlist") header = $('.user-menu');
     else if(_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_geotour") header = $('ul.detailed');
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
