@@ -737,7 +737,7 @@ function ctAddToCoordInfoLink(code) {
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new")
                 {
-             code = $(".cache-preview-header .cache-metadata.cache-metadata-code");
+             code = $(".cache-metadata.cache-metadata-code");
             let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
             ctGetPublicLists(gcCode);
