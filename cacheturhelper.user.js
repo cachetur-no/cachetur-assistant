@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.3.0.3g
+// @version         3.3.0.3h
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -38,7 +38,7 @@
 // @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
 // @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @downloadURL     https://cghove.no/cachetur/cacheturhelper.user.js
+// @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
 this.$ = this.jQuery = jQuery.noConflict(true);
 
@@ -123,7 +123,7 @@ function ctStart() {
 
     if(timeSinceLastUse > 3600) {
         if(_ctPage === "gc_map_new") {
-            waitForKeyElements(".user-menu" && ".profile-panel", function() {
+            waitForKeyElements(".user-menu", function() {
                 ctInitInactive();
             });
         } else {
@@ -276,7 +276,7 @@ function ctPrependToHeader(data) {
 
     let header;
     if(_ctPage === "gc_map") header = $('#uxLoginStatus_divSignedIn');
-    else if(_ctPage === "gc_map_new") header = $('.user-menu'&& '.profile-panel');
+    else if(_ctPage === "gc_map_new") header = $('.user-menu');
     else if(_ctPage === "gc_bmlist") header = $('.user-menu');
     else if(_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_geotour") header = $('ul.detailed');
@@ -744,9 +744,8 @@ function ctAddToCoordInfoLink(code) {
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new") {
            document.querySelector('.cache-preview-action-menu')
-       var code = $('.cache-metadata-code').html();
-      //code = $("#cache-metadata-code");
-    console.log("injecting cachetur menus to geocaches");
+      code = $("#cache-metadata-code").html();
+      console.log("injecting cachetur menus to geocaches");
       $(".cache-preview-action-menu").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
       code.parent().prepend('<div class="links Clear cachetur-controls-container">' + img + '</div>');
     } else {
