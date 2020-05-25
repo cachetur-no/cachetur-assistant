@@ -5,7 +5,7 @@
 // @namespace       http://cachetur.no/
 // @version         3.3.0.3h
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg å legge til cacher i cachetur.no
+// @description:no  Hjelper deg Ã¥ legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -123,7 +123,7 @@ function ctStart() {
 
     if(timeSinceLastUse > 3600) {
         if(_ctPage === "gc_map_new") {
-            waitForKeyElements(".user-menu", function() {
+            waitForKeyElements(".user-menu,.profile-panel", function() {
                 ctInitInactive();
             });
         } else {
@@ -276,7 +276,7 @@ function ctPrependToHeader(data) {
 
     let header;
     if(_ctPage === "gc_map") header = $('#uxLoginStatus_divSignedIn');
-    else if(_ctPage === "gc_map_new") header = $('.user-menu');
+    else if(_ctPage === "gc_map_new") header = $('.user-menu,.profile-panel');
     else if(_ctPage === "gc_bmlist") header = $('.user-menu');
     else if(_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_geotour") header = $('ul.detailed');
