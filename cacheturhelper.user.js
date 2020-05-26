@@ -742,10 +742,10 @@ function ctAddToCoordInfoLink(code) {
             let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new") {
-            document.querySelector('.cache-preview-action-menu')
+            document.querySelector('.cache-preview-header')
             code = $("#cache-metadata-code").html();
             console.log("injecting cachetur menus to geocaches");
-            $(".cache-preview-action-menu").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
+            $(".cache-preview-header").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
             code.parent().prepend('<div class="links Clear cachetur-controls-container">' + img + '</div>');
         } else {
             code.prepend(img);
