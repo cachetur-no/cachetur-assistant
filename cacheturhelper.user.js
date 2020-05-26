@@ -1,4 +1,4 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
@@ -34,9 +34,9 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/browse/i18next@19.4.5/i18next.min.js
-// @require         https://unpkg.com/browse/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
-// @require         https://unpkg.com/browse/i18next-browser-languagedetector@4.2.0/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next@15.1.3/i18next.min.js
+// @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
+// @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
