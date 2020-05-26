@@ -1,11 +1,11 @@
-// ==UserScript==
+﻿// ==UserScript==
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.3.0.3h
+// @version         3.4.0.0
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg � legge til cacher i cachetur.no
+// @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -123,7 +123,7 @@ function ctStart() {
 
     if(timeSinceLastUse > 3600) {
         if(_ctPage === "gc_map_new") {
-            waitForKeyElements(".user-menu", function() {
+            waitForKeyElements(".user-menu,.profile-panel", function() {
                 ctInitInactive();
             });
         } else {
@@ -276,7 +276,7 @@ function ctPrependToHeader(data) {
 
     let header;
     if(_ctPage === "gc_map") header = $('#uxLoginStatus_divSignedIn');
-    else if(_ctPage === "gc_map_new") header = $('.user-menu');
+    else if(_ctPage === "gc_map_new") header = $('.user-menu,.profile-panel');
     else if(_ctPage === "gc_bmlist") header = $('.user-menu');
     else if(_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_geotour") header = $('ul.detailed');
@@ -601,11 +601,10 @@ function ctInitAddLinks() {
             break;
         case "gc_map_new":
             ctWatchNewMap();
-            $("#sidebar-group").bind("DOMSubtreeModified", ctMapnewBindToDOMChanges);
-      waitForKeyElements("#browse-map-cta", function () {
-        $(".app-main").append('<warning; large style="color: red; position: absolute; top: 52px; right: 15px;">'+"After adding caches, click on center off map before clicking a new cache " + '</large>');
-      });
-      break;
+            $("#sidebar-group").bind("DOMSubtreeModified", ctNewMapBindToDOMChanges);
+            waitForKeyElements("#browse-map-cta", function () {
+            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+"After adding caches, click on center off map before clicking a new cache " + '</large>');});
+            break;
 
         case "gc_geotour":
             $("#map_container").bind("DOMSubtreeModified", ctMapBindToDOMChanges);
@@ -636,7 +635,7 @@ function ctWatchNewMap() {
         if(cacheCode === _ctNewMapActiveCache) {
             return;
         }
-          _ctNewMapActiveCache = cacheCode;
+            _ctNewMapActiveCache = cacheCode;
 
         let cacheId = parseInt(document.getElementsByClassName("more-info-link")[0].getAttribute("data-id"));
 
@@ -718,7 +717,7 @@ function ctMapBindToDOMChanges() {
     }
 }
 
-function ctMapnewBindToDOMChanges() {
+function ctNewMapBindToDOMChanges() {
   let codes = $(".cache-metadata-code");
 
   if (codes.length !== _ctLastCount) {
@@ -743,13 +742,13 @@ function ctAddToCoordInfoLink(code) {
             let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new") {
-           document.querySelector('.cache-preview-action-menu')
-      code = $("#cache-metadata-code").html();
-      console.log("injecting cachetur menus to geocaches");
-      $(".cache-preview-action-menu").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
-      code.parent().prepend('<div class="links Clear cachetur-controls-container">' + img + '</div>');
-    } else {
-      code.prepend(img);
+            document.querySelector('.cache-preview-action-menu')
+            code = $("#cache-metadata-code").html();
+            console.log("injecting cachetur menus to geocaches");
+            $(".cache-preview-action-menu").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
+            code.parent().prepend('<div class="links Clear cachetur-controls-container">' + img + '</div>');
+        } else {
+            code.prepend(img);
     }
 
         code.addClass("cachetur-add");
