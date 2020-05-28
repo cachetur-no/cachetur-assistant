@@ -40,7 +40,7 @@
     "by": "by"
   },
   "alerts": {
-    "browsemap": "Select browse map to add caches from map"
+    "browsemap": "Select browse map to add caches from map",
     "newmap": "After adding caches, click on center off map before clicking a new cache"
   }
 
