@@ -94,8 +94,10 @@ function loadTranslations() {
         .use(i18nextXHRBackend)
         .use(i18nextBrowserLanguageDetector)
         .init({
-          whitelist: ['en', 'no'],
-          fallbackLng: 'en',
+          //debug: true, // debugger to help establish language codes
+          whitelist: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ','fi_FI','es_ES',''],
+          preload: ['nb_NO', 'en','en_US'],
+          fallbackLng: ['en','en_US'],
           ns: ['cachetur'],
           defaultNS: 'cachetur',
           backend: {
@@ -607,7 +609,8 @@ function ctInitAddLinks() {
             ctWatchNewMap();
             $(".app-main").bind("DOMSubtreeModified", ctNewMapBindToDOMChanges);
             waitForKeyElements("#browse-map-cta", function () {
-            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+ i18next.t('alerts.newmap')  + '</large>');});
+            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">' + i18next.t('alerts.newmap') + '</large>');});
+            
             break;
 
         case "gc_geotour":

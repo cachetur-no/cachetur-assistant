@@ -41,7 +41,7 @@
   },
   "alerts": {
     "browsemap": "Select browse map to add caches from map"
-    "newmap": "After adding caches, click on center off map before clicking a new cache"
+    "newmap": "After adding caches, click on center of map before clicking a new cache"
   }
 
 }
