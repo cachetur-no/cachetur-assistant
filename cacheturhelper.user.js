@@ -607,7 +607,7 @@ function ctInitAddLinks() {
             ctWatchNewMap();
             $(".app-main").bind("DOMSubtreeModified", ctNewMapBindToDOMChanges);
             waitForKeyElements("#browse-map-cta", function () {
-            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+"After adding caches, click on center off map before clicking a new cache " + '</large>');});
+            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+ i18next.t('alerts.newmap')  + '</large>');});
             break;
 
         case "gc_geotour":
