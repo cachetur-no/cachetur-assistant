@@ -5,7 +5,7 @@
 // @namespace       http://cachetur.no/
 // @version         3.4.0.0
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg Ã¥ legge til cacher i cachetur.no
+// @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -34,9 +34,9 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next@15.1.3/i18next.min.js
-// @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
-// @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next@19.4.5/i18next.min.js
+// @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
+// @require         https://unpkg.com/i18next-browser-languagedetector@4.2.0/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
@@ -94,7 +94,8 @@ function loadTranslations() {
         .use(i18nextXHRBackend)
         .use(i18nextBrowserLanguageDetector)
         .init({
-          fallbackLng: 'en-US',
+          whitelist: ['en', 'no'],
+          fallbackLng: 'en',
           ns: ['cachetur'],
           defaultNS: 'cachetur',
           backend: {
@@ -237,7 +238,8 @@ function ctInitNotLoggedIn() {
     else if(_ctPage === "gc_geotour") GM_addStyle("#cachetur-header { padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; }");
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 7px; }");
 
-    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> '+i18next.t('menu.notloggedin')+'<br>'+i18next.t('menu.deactivated')+'</span></li>');
+    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> '+ i18next.t ('menu.notloggedin')+'<br>'+i18next.t('menu.deactivated')+'</span></li>');
+    console.log(i18next.t('menu.notloggedin'))
 
     _initialized = true;
 }
@@ -253,7 +255,8 @@ function ctInitInactive() {
     else if(_ctPage === "gc_geotour") GM_addStyle("#cachetur-header { padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; }");
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 12px; }");
 
-    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">'+i18next.t('activate.button')+'</a></li>');
+    ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">'+i18next.t("activate.button")+'</a></li>');
+    console.log(i18next.t('activate.button'))
 
     $("#cachetur-activate").click(function(e) {
         GM_setValue("cachetur_last_action", Date.now());
@@ -315,6 +318,7 @@ function ctCreateTripList() {
                 ".cachetur-map_marker_dnf { border: 1px solid #ffffff; background-color: dodgerblue; } ");
 
             ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" title="'+i18next.t('menu.loggedinas')+' ' + _ctCacheturUser + '" /> '+i18next.t('menu.addto')+' </span><select id="cachetur-tur-valg">' + options + '</select><button id="cachetur-tur-open" class="cachetur-menu-button" type="button" title="'+i18next.t('menu.opentrip')+'"><img src="https://cachetur.no/api/img/arrow.png" style="height:16px;"/></button><button id="cachetur-tur-refresh" type="button" class="cachetur-menu-button" title="'+i18next.t('menu.refresh')+'"><img src="https://cachetur.no/api/img/refresh.png" style="height:16px;"/></button><button id="cachetur-tur-add-ct-caches" type="button" class="cachetur-menu-button" title="'+i18next.t('menu.showonmap')+'"><img src="https://cachetur.no/api/img/map.png" style="height:16px;"/></button><button id="cachetur-tur-fitbounds" class="cachetur-menu-button" type="button" title="'+i18next.t('menu.fitroute')+'"><img src="https://cachetur.no/api/img/zoom.png" style="height:16px;"/></button> <span id="cachetur-tur-antall-container">(<span id="cachetur-tur-antall"></span>)</span></li>');
+    console.log(i18next.t('triplist'))
 
             let tripSelector = $("#cachetur-tur-valg");
             let storedTrip = GM_getValue("cachetur_selected_trip", 0);
@@ -601,9 +605,9 @@ function ctInitAddLinks() {
             break;
         case "gc_map_new":
             ctWatchNewMap();
-            $("#sidebar-group").bind("DOMSubtreeModified", ctNewMapBindToDOMChanges);
+            $(".app-main").bind("DOMSubtreeModified", ctNewMapBindToDOMChanges);
             waitForKeyElements("#browse-map-cta", function () {
-            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+"After adding caches, click on center off map before clicking a new cache " + '</large>');});
+            $(".app-main").append('<large style="color: red; position: absolute; top: 52px; right: 15px;">'+ i18next.t('alerts.newmap')  + '</large>');});
             break;
 
         case "gc_geotour":
@@ -625,7 +629,7 @@ function ctWatchNewMap() {
     let config = { attributes: true, childList: true, subtree: true };
 
     let callback = function(mutationsList, observer) {
-        if(!$("#sidebar").hasClass("has-active-cache")) {
+        if(!$(".cache-detail-preview").hasClass("cache-preview-header")) {
             _ctNewMapActiveCache = "";
             return;
         }
@@ -742,7 +746,7 @@ function ctAddToCoordInfoLink(code) {
             let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new") {
-            document.querySelector('.cache-preview-header')
+            document.querySelector('.cache-preview-header h1')
             code = $("#cache-metadata-code").html();
             console.log("injecting cachetur menus to geocaches");
             $(".cache-preview-header").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
