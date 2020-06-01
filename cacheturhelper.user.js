@@ -586,7 +586,7 @@ function ctGetPublicLists_gc_map_new(cache) {
 
             console.log("Injecting list of lists");
             let alternate = false;
-            let listHtml = '<div class="cachetur-controls-container"><h5> This cache is in these templates, lists or trips you own or follow on cachetur.no</h5>';
+            let listHtml = '<div class="cachetur-controls-container"><h5> '+i18next.t('lists.in')+'</h5>';
             data.forEach(function(list) {
                 let listElement = '<li class="'+(alternate ? 'AlternatingRow' : '')+'"><a href="https://cachetur.no/'+(list.source === 'triptemplate' ? 'tur' : (list.source === 'trip' ? 'fellestur' : 'liste'))+'/'+list.id+'">'+list.name+'</a><br>'+i18next.t('template.by')+' '+list.owner+'</li>';
                 alternate = !alternate;
@@ -628,7 +628,7 @@ function ctInitAddLinks() {
             $("#form1").bind("DOMSubtreeModified", ctMapBindToDOMChanges);
             if (document.querySelector("script[src*='//maps.googleapis.com/']")){
             waitForKeyElements(".map-cta", function () {
-            $(".map-wrapper").append('<large style="color: red; position: absolute; top: 62px; right: 25px;text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;">'+ i18next.t('alerts.google')  + '</large>');});
+            $(".map-wrapper").append('<large style="color: red; position: absolute; top: 62px; right: 25px;">'+ i18next.t('alerts.google')  + '</large>');});
 			return;
 		}
             break;
