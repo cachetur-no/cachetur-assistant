@@ -42,10 +42,9 @@
   "alerts": {
     "browsemap": "Select browse map to add caches from map",
     "newmap": "After adding caches, click on center of map before clicking a new cache",
-"google":"You have to switch from google to leafleat maps in order for the assistant to work"
-  },
-"lists": {
+    "google": "You have to switch from google to leafleat maps in order for the assistant to work"
+   },
+   "lists": {
      "in": "This cache is found in these templates, lists or trips that you own or follow on cachetur.no"
-}
-
+   }
 }
