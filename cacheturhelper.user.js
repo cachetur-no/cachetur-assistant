@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name            The Cachetur Assistant
-// @name:no         cacheturassistenten
+// @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
 // @version         3.4.0.1
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg � legge til cacher i cachetur.no
+// @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -94,9 +94,9 @@ function loadTranslations() {
         .use(i18nextXHRBackend)
         .use(i18nextBrowserLanguageDetector)
         .init({
-          whitelist: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ'],
-          preload: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ'],
-          fallbackLng: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ'],
+          whitelist: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ','fi_FI','es_ES'],
+          preload: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ','fi_FI','es_ES'],
+          fallbackLng: ['nb_NO', 'en','de_DE','sv_SE','en_US','da_DK','nl_NL','fr_FR','cs_CZ','fi_FI','es_ES'],
           ns: ['cachetur'],
           defaultNS: 'cachetur',
           backend: {
@@ -676,7 +676,7 @@ function ctWatchNewMap() {
         ctUpdateAddImage();
     };
 
-   let observer = new MutationObserver((callback)=> console.log("changed!"));
+   let observer = new MutationObserver((callback));
     observer.observe(targetNode, config);
 
     $("body").on("click", ".cachetur-add-code", function(evt) {
