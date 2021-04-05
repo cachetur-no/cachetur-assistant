@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name            The Cachetur Assistant test ver
-// @name:no         Cacheturassistenten test ver
+// @name            The Cachetur Assistant
+// @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         0.4.1.0
+// @version         3.4.1.1
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -581,7 +581,7 @@ function ctGetPublicLists_gc_map_new(cache) {
                 return;
             }
 
-            console.log("Injecting list of lists");
+            console.log(("Injecting list of lists to geocache ") +cache);
             let alternate = false;
             let listHtml = '<div class="cachetur-controls-container"><h5> '+i18next.t('lists.in')+'</h5>';
             data.forEach(function(list) {
@@ -631,7 +631,6 @@ function ctInitAddLinks() {
 		    }
             break;
         case "gc_map_new":
-            //$(".app-main").on("DOMSubtreeModified", ctNewMapBindToDOMChanges);
             if(!document.querySelector('more-info-label')) ctWatchNewMap();
 
             break;
@@ -651,29 +650,21 @@ function ctInitAddLinks() {
 
 function ctWatchNewMap() {
     console.log("start mutationobserver");
-console.log("if ok");
     let targetNode = document.body;
     let config = { attributes: true, childList: true, subtree: true };
-console.log("config ok");
     let callback = function(mutationsList, observer) {
-        if(document.getElementsByClassName("has-active-cache").length === 0) {
-            console.log("activelength");
+
+        if(document.getElementsByClassName("more-info-label").length === 0) {
             return;
         }
    let cacheCode = document.getElementsByClassName("cache-metadata-code")[0].innerText;
-console.log("let cachecode svar " + cacheCode);
 
         if(cacheCode === _ctNewMapActiveCache) {
             return;
         }
-        console.log("return feil");
         _ctNewMapActiveCache = cacheCode;
-        console.log("_ctNewMapActiveCache = " +_ctNewMapActiveCache);
-        console.log("cacheCode = " +cacheCode);
         $(".cachetur-add-code").data("code", cacheCode);
-       // cacheCode.each(function () {
-      ctAddToCoordInfoLink($(this));
-   // });
+      ctAddToCoordInfoLink($('.cache-metadata-code'));
         ctUpdateAddImage();
     };
 
@@ -710,7 +701,6 @@ console.log("let cachecode svar " + cacheCode);
         });
 
     });
-   // observer.disconnect();
 
 }
 
@@ -753,17 +743,6 @@ function ctMapBindToDOMChanges() {
     }
 }
 
-function ctNewMapBindToDOMChanges() {
-   let codesnm = $(".cache-metadata-code");
-console.log("ctNewMapBindToDOMChanges codesnm= " + codesnm.html());
-  if (codesnm.length !== _ctLastCount) {
-    _ctLastCount = codesnm.length;
-    codesnm.each(function () {
-    ctAddToCoordInfoLink($(this));
-    });
-  }
-
-}
 
 function ctAddToCoordInfoLink(code) {
     if (!code.hasClass("cachetur-add")) {
@@ -787,7 +766,7 @@ function ctAddToCoordInfoLink(code) {
             code.prepend(img);
         }
 
-        (".cache-metadata-code").addClass("cachetur-add");
+        code.addClass("cachetur-add");
 
         ctUpdateAddImage();
     }
