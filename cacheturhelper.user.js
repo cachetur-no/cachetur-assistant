@@ -631,7 +631,9 @@ function ctInitAddLinks() {
 		    }
             break;
         case "gc_map_new":
-            $(".app-main").on("DOMSubtreeModified", ctNewMapBindToDOMChanges);
+            //$(".app-main").on("DOMSubtreeModified", ctNewMapBindToDOMChanges);
+            if(!document.querySelector('more-info-label')) ctWatchNewMap();
+
             break;
         case "gc_geotour":
             $("#map_container").bind("DOMSubtreeModified", ctMapBindToDOMChanges);
@@ -669,9 +671,12 @@ console.log("let cachecode svar " + cacheCode);
         console.log("_ctNewMapActiveCache = " +_ctNewMapActiveCache);
         console.log("cacheCode = " +cacheCode);
         $(".cachetur-add-code").data("code", cacheCode);
-
+       // cacheCode.each(function () {
+      ctAddToCoordInfoLink($(this));
+   // });
         ctUpdateAddImage();
     };
+
 
     let observer = new MutationObserver((callback));
     observer.observe(targetNode, config);
@@ -705,6 +710,8 @@ console.log("let cachecode svar " + cacheCode);
         });
 
     });
+   // observer.disconnect();
+
 }
 
 function ctInitPGCLiveMapListener() {
@@ -748,13 +755,14 @@ function ctMapBindToDOMChanges() {
 
 function ctNewMapBindToDOMChanges() {
    let codesnm = $(".cache-metadata-code");
-console.log("ctNewMapBindToDOMChanges codesnm= " + codesnm);
+console.log("ctNewMapBindToDOMChanges codesnm= " + codesnm.html());
   if (codesnm.length !== _ctLastCount) {
     _ctLastCount = codesnm.length;
     codesnm.each(function () {
-      ctAddToCoordInfoLink($(this));
+    ctAddToCoordInfoLink($(this));
     });
   }
+
 }
 
 function ctAddToCoordInfoLink(code) {
@@ -771,8 +779,6 @@ function ctAddToCoordInfoLink(code) {
             let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> '+i18next.t('send')+'</a>';
             code.parent().append('<div class="links Clear cachetur-controls-container">'+img+'</div>');
         } else if (_ctPage === "gc_map_new") {
-              if(!document.querySelector('more-info-label')) ctWatchNewMap();
-
             console.log("injecting cachetur menus to geocache " +gcCode);
             code = (".cache-metadata-code");
             $(".cache-preview-header").css("overflow","auto").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
@@ -781,7 +787,7 @@ function ctAddToCoordInfoLink(code) {
             code.prepend(img);
         }
 
-        code.addClass("cachetur-add");
+        (".cache-metadata-code").addClass("cachetur-add");
 
         ctUpdateAddImage();
     }
