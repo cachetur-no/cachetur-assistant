@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.4.1.2
+// @version         3.4.1.3
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -760,7 +760,7 @@ function ctAddToCoordInfoLink(code) {
         } else if (_ctPage === "gc_map_new") {
             console.log("injecting cachetur menus to geocache " +gcCode);
             code = (".cache-metadata-code");
-            $(".cache-preview-header").css("overflow","auto").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
+            $(".cache-preview-header").css("overflow","auto").css("height","50%").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
             ctGetPublicLists_gc_map_new(gcCode);
         } else {
             code.prepend(img);
