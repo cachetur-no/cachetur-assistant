@@ -138,7 +138,7 @@ function ctStart() {
 
 function ctPreInit() {
     console.log("Continuing init of Cacheturassistenten");
-    if (_ctPage !== "pgc_map" && _ctPage !== "pgc_vgps" && _ctPage !== "gc_geotour" && _ctPage !== "gc_map_new" && _ctPage !== "gc_bmlist" && $(".logged-in-user").length < 1) {
+    if (_ctPage !== "pgc_map" && _ctPage !== "pgc_vgps" && _ctPage !== "gc_geotour" && _ctPage !== "gc_map_new" && _ctPage !== "gc_map" && _ctPage !== "gc_geocache" && _ctPage !== "gc_bmlist" && $(".logged-in-user").length < 1) {
         $(document).bind("DOMSubtreeModified.cachetur-init", function () {
             if ($(".profile-panel.detailed").length > 0) {
                 $(document).unbind("DOMSubtreeModified.cachetur-init");
@@ -277,10 +277,10 @@ function ctPrependToHeader(data) {
     console.log("Injecting cachetur.no in menu");
 
     let header;
-    if(_ctPage === "gc_map") header = $('#uxLoginStatus_divSignedIn');
+    if(_ctPage === "gc_map") header = $('.user-menu');
     else if(_ctPage === "gc_map_new") header = $('.user-menu,.profile-panel');
     else if(_ctPage === "gc_bmlist") header = $('.user-menu');
-    else if(_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
+    else if(_ctPage === "gc_geocache") header = $('.user-menu');
     else if(_ctPage === "gc_geotour") header = $('ul.detailed');
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
 
