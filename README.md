@@ -8,6 +8,18 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
  Release notes
  
+Version 3.5.0.1
+Monday 06. Jun 2021 21:45
+Fixed issue where assistant wasn't displaying on geotours.
+And made new geocaching gc header fit content, to fix problem when, pgc script is enabeled, and menu line gets cramped
+ 
+Version 3.5.0.0
+Monday 26. Apr 2021 20:50
+Fixed issue where add to trip option showed up twice
+Fixed issue with stale trip/list indication on the search map
+Compatibility fix GCLH2
+Compatibility fix geocaching.com
+ 
 Version 3.4.1.3
 Saturday 24. April 2021 09:30
 Fixed issue where The cachetur assistant stopped working on geocaching.com after the latest changes to geocaching.com
