@@ -283,11 +283,11 @@ function ctPrependToHeader(data) {
     console.log("Injecting cachetur.no in menu");
 
     let header;
-    if(_ctPage === "gc_map" || _ctPage === "gc_geotour" ) header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
+    if(_ctPage === "gc_map") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_map_new") header = $('.user-menu,.profile-panel');
     else if(_ctPage === "gc_bmlist") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "gc_geocache") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
-    //else if(_ctPage === "gc_geotour") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
+    else if(_ctPage === "gc_geotour") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
 
     if(header) {
