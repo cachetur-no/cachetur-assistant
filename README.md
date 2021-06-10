@@ -7,11 +7,14 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  This script will only work if you select Leaflet as your map provider on geocaching.com.
  
  Release notes
+
+Version 3.5.0.
+Friday 11. Jun 2021 00:45
+Fixed compatibility issue with PGC user script, and some minor GUI tweaks
  
 Version 3.5.0.1
 Monday 06. Jun 2021 21:45
 Fixed issue where assistant wasn't displaying on geotours.
-And made new geocaching gc header fit content, to fix problem when, pgc script is enabeled, and menu line gets cramped
  
 Version 3.5.0.0
 Monday 26. Apr 2021 20:50
