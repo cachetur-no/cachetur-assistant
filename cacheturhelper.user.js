@@ -169,8 +169,8 @@ function ctCheckLogin() {
         _ctCacheturUser = response.username;
         _ctLanguage = response.language;
         i18next.changeLanguage(_ctLanguage);
-        if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTouser('<li id="cachetur-header"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
-        if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
+        if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
+        if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
 
         if (_ctCacheturUser === undefined || _ctCacheturUser === '') {
             console.log("Not logged in");
@@ -301,15 +301,13 @@ function ctPrependToHeader(data) {
 function ctPrependTouser(data) {
 
     let header;
-    if(_ctPage === "gc_map") header = $('.player-profile');
-    else if(_ctPage === "gc_map_new") header = $('.player-profile');
-    else if(_ctPage === "gc_bmlist") header = $('.player-profile');
-    else if(_ctPage === "gc_geocache") header = $('.player-profile');
-    else if(_ctPage === "gc_geotour") header = $('.player-profile');
-    else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
+    if(_ctPage === "gc_map" || _ctPage === "gc_map_new" || _ctPage === "gc_bmlist" || _ctPage === "gc_geocache" || _ctPage === "gc_geotour") header = $('span.username');
 
     if(header) {
         header.append(data);
+        waitForKeyElements("#pgc", function() {
+        $("#cachetur-header1").remove();
+            });
     }
 
 }
