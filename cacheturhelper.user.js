@@ -1,11 +1,12 @@
 // ==UserScript==
+/* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto */
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.1
+// @version         3.5.0.2
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg å legge til cacher i cachetur.no
+// @description:no  Hjelper deg ? legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -41,7 +42,6 @@
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
 this.$ = this.jQuery = jQuery.noConflict(true);
-
 let _ctLastCount = 0;
 let _ctCacheturUser = "";
 let _ctLanguage = "en";
@@ -124,13 +124,15 @@ function ctStart() {
     console.log("The Cachetur Assistant was last used " + timeSinceLastUse + " seconds ago");
 
     if(timeSinceLastUse > 3600) {
-        if(_ctPage === "gc_map_new") {
+        if(_ctPage === "gc_map_new" ) {
             waitForKeyElements(".user-menu,.profile-panel", function() {
                 ctInitInactive();
             });
         } else {
+
             ctInitInactive();
-        }
+                }
+
     } else {
         ctPreInit();
     }
@@ -163,24 +165,23 @@ function ctPreInit() {
 function ctCheckLogin() {
     console.log("Checking login");
 
-    _ctCacheturUser = ctApiCall("user_get_current", "", function(data) {
-        _ctCacheturUser = data.username;
-        _ctLanguage = data.language;
+    _ctCacheturUser = ctApiCall("user_get_current", "", function(response) {
+        _ctCacheturUser = response.username;
+        _ctLanguage = response.language;
         i18next.changeLanguage(_ctLanguage);
+        if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
+        if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
 
         if (_ctCacheturUser === undefined || _ctCacheturUser === '') {
             console.log("Not logged in");
             ctInitNotLoggedIn();
         }
+
         else {
             console.log("Login OK");
             ctInit();
         }
-        function waitForHeader(waitCount) {
-                    if ($('.user-menu')[0]) ;
-                    else {waitCount++; if (waitCount <= 1000) setTimeout(function(){waitForHeader(waitCount);}, 10);}
-                }
-                waitForHeader(0);
+
             }
     );
 }
@@ -192,7 +193,7 @@ function ctInvalidateLogin() {
 }
 
 function ctApiCall(call, params, callback) {
-    let appId = "Cacheturassistenten " + GM_info.script.version  + " - " + _ctPage;
+    let appId = "Cacheturassistenten " + GM_info.script.version + " - " + _ctPage;
 
     GM_xmlhttpRequest({
         method: "POST",
@@ -252,7 +253,7 @@ function ctInitNotLoggedIn() {
 
 function ctInitInactive() {
     if(_initialized) return;
-
+setTimeout(function (){
     console.log("Assistant not being actively used, disabling");
 
     if(_ctPage === "gc_geocache" || _ctPage === "gc_bmlist") GM_addStyle("nav .wrapper { max-width: unset; } #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-header { padding: 8px 1em 22px 2em; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left;  } ");
@@ -268,6 +269,8 @@ function ctInitInactive() {
     });
 
     _initialized = true;
+    }, 1000);
+
 }
 
 function ctPGCMapInit() {
@@ -293,6 +296,20 @@ function ctPrependToHeader(data) {
     if(header) {
         header.prepend(data);
     }
+}
+
+function ctPrependTouser(data) {
+
+    let header;
+    if(_ctPage === "gc_map" || _ctPage === "gc_map_new" || _ctPage === "gc_bmlist" || _ctPage === "gc_geocache" || _ctPage === "gc_geotour") header = $('span.username');
+
+    if(header) {
+        header.append(data);
+        waitForKeyElements("#pgc", function() {
+        $("#cachetur-header1").remove();
+            });
+    }
+
 }
 
 function ctCreateTripList() {
@@ -323,6 +340,7 @@ function ctCreateTripList() {
                 ".cachetur-map_marker_dnf { border: 1px solid #ffffff; background-color: dodgerblue; } ");
 
             ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" title="'+i18next.t('menu.loggedinas')+' ' + _ctCacheturUser + '" /> '+i18next.t('menu.addto')+' </span><select id="cachetur-tur-valg">' + options + '</select><button id="cachetur-tur-open" class="cachetur-menu-button" type="button" title="'+i18next.t('menu.opentrip')+'"><img src="https://cachetur.no/api/img/arrow.png" style="height:16px;"/></button><button id="cachetur-tur-refresh" type="button" class="cachetur-menu-button" title="'+i18next.t('menu.refresh')+'"><img src="https://cachetur.no/api/img/refresh.png" style="height:16px;"/></button><button id="cachetur-tur-add-ct-caches" type="button" class="cachetur-menu-button" title="'+i18next.t('menu.showonmap')+'"><img src="https://cachetur.no/api/img/map.png" style="height:16px;"/></button><button id="cachetur-tur-fitbounds" class="cachetur-menu-button" type="button" title="'+i18next.t('menu.fitroute')+'"><img src="https://cachetur.no/api/img/zoom.png" style="height:16px;"/></button> <span id="cachetur-tur-antall-container">(<span id="cachetur-tur-antall"></span>)</span></li>');
+
 
             let tripSelector = $("#cachetur-tur-valg");
             let storedTrip = GM_getValue("cachetur_selected_trip", 0);
@@ -433,7 +451,7 @@ function ctGetAddedCodes(id) {
 }
 
 function ctGetTripRoute(id) {
-    if(!id || id.endsWith('L'))  {
+    if(!id || id.endsWith('L')) {
         $("#cachetur-tur-fitbounds").prop('disabled', true);
         return;
     }
@@ -589,7 +607,7 @@ function ctGetPublicLists_gc_map_new(cache) {
 
             console.log(("Injecting list of lists to geocache ") +cache);
             let alternate = false;
-            let listHtml = '<div class="cachetur-controls-container"><h5> '+i18next.t('lists.in')+'</h5>';
+            let listHtml = '<div class="cachetur-controls-container"><h3 class="WidgetHeader"><img src="https://cachetur.no/api/img/cachetur-15.png" /> Cachetur.no</h3><div class="WidgetBody"><h5>'+i18next.t('lists.in')+'</h5>';
             data.forEach(function(list) {
                 let listElement = '<li class="'+(alternate ? 'AlternatingRow' : '')+'"><a href="https://cachetur.no/'+(list.source === 'triptemplate' ? 'tur' : (list.source === 'trip' ? 'fellestur' : 'liste'))+'/'+list.id+'">'+list.name+'</a><br>'+i18next.t('template.by')+' '+list.owner+'</li>';
                 alternate = !alternate;
@@ -597,7 +615,7 @@ function ctGetPublicLists_gc_map_new(cache) {
             });
             listHtml = listHtml + '</ul></div></div>';
 
-            $('.cache-preview-header').append(listHtml);
+            $('.cache-preview-action-menu').prepend(listHtml);
         });
 }
 
@@ -631,13 +649,21 @@ function ctInitAddLinks() {
             $("#form1").bind("DOMSubtreeModified", ctMapBindToDOMChanges);
             if (document.querySelector("script[src*='//maps.googleapis.com/']")){
                 waitForKeyElements(".map-cta", function () {
-                    $(".map-wrapper").append('<large style="color: red; position: absolute; top: 62px; right: 25px;">'+ i18next.t('alerts.google')  + '</large>');
+                    $(".map-wrapper").append('<large style="color: red; position: absolute; top: 62px; right: 25px;">'+ i18next.t('alerts.google') + '</large>');
                 });
 			    return;
 		    }
             break;
         case "gc_map_new":
-            if(!document.querySelector('more-info-label')) ctWatchNewMap();
+            console.log("check google")
+            if (document.querySelector("script async[src*='maps.googleapis.com/maps-api-v3']")){
+                                console.log("google map");
+                waitForKeyElements("#clear-map-control", function () {
+                    $(".map-container").append('<large style="color: red; position: absolute; top: 62px; right: 25px;">'+ i18next.t('alerts.google') + '</large>');
+                });
+			    break;
+		    }
+            if(!document.querySelector('primary log-geocache')) ctWatchNewMap();
 
             break;
         case "gc_geotour":
@@ -660,7 +686,7 @@ function ctWatchNewMap() {
     let config = { attributes: true, childList: true, subtree: true };
     let callback = function(mutationsList, observer) {
 
-        if(document.getElementsByClassName("more-info-label").length === 0) {
+        if(document.getElementsByClassName("primary log-geocache").length === 0) {
             return;
         }
    let cacheCode = document.getElementsByClassName("cache-metadata-code")[0].innerText;
@@ -672,6 +698,7 @@ function ctWatchNewMap() {
         $(".cachetur-add-code").data("code", cacheCode);
       ctAddToCoordInfoLink($('.cache-metadata-code'));
         ctUpdateAddImage();
+
     };
 
 
@@ -766,12 +793,12 @@ function ctAddToCoordInfoLink(code) {
         } else if (_ctPage === "gc_map_new") {
             console.log("injecting cachetur menus to geocache " +gcCode);
             code = (".cache-metadata-code");
-            $(".cache-preview-header").css("overflow","auto").css("height","50%").append('<ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
+            $(".cache-preview-action-menu").prepend('<br><ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
             ctGetPublicLists_gc_map_new(gcCode);
         } else {
             code.prepend(img);
         }
-        if (_ctPage === "gc_map_new") {
+       if (_ctPage === "gc_map_new") {
         $(".cache-metadata-code").addClass("cachetur-add");
        } else {
         code.addClass("cachetur-add");
@@ -1058,7 +1085,7 @@ function ctUpdateAddImage(codeAddedTo) {
             } else if(_ctPage === "gc_map_new") {
                let li = $('<li></li>');
                 commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
-                img.parent().append(commentControl);                li.append(commentControl);
+                img.parent().append(commentControl); li.append(commentControl);
                 $("#cachetur-controls-container").append(li);
             } else if(_ctPage === "gc_map") {
                 commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
@@ -1263,7 +1290,7 @@ function ctSetIconForCode(code) {
                 } else if(_ctPage === "gc_map") {
                     img.closest(".map-item").find(".cachetur-found-by-container").remove();
                     img.closest(".map-item").append('<div class="links Clear cachetur-found-by-container"><b><img src="https://cachetur.no/api/img/attfind.png" /> '+i18next.t('foundby')+'</b> ' + foundBy + "</div>");
-                }  else {
+                } else {
                     img.parent().prepend(' <img class="cachetur-found-by" data-code="' + code + '" src="https://cachetur.no/api/img/attfind.png" title="'+i18next.t('foundby')+' ' + foundBy + '" style="' + style + '" /> ');
                 }
             }
