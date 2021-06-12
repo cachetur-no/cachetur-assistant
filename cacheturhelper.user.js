@@ -269,7 +269,7 @@ setTimeout(function (){
     });
 
     _initialized = true;
-    }, 1000);
+    }, 1500);
 
 }
 
