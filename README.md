@@ -8,7 +8,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
-### Version 3.5.0.
+### Version 3.5.0.3
+Moday 14. Jun 2021 15:15
+- Added warning banner when GCLH2 is active
+ 
+### Version 3.5.0.2
 Friday 11. Jun 2021 00:45
 - Fixed compatibility issue with PGC user script, and some minor GUI tweaks
  

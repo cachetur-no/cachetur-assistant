@@ -4,9 +4,9 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.2
+// @version         3.5.0.3
 // @description     Companion script for cachetur.no
-// @description:no  Hjelper deg ? legge til cacher i cachetur.no
+// @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
 // @include         https://www.geocaching.com/play/map*
 // @include         http://www.geocaching.com/play/map*
@@ -41,6 +41,9 @@
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
+waitForKeyElements("gclh_nav", function() {
+$("body,.app-content").prepend('<div style="text-align: center; background-color: yellow; font-weight: bold; color: red;">Script incompaptible: You need to disable GCLH2 to take advantage of the Cachetur Assistant</div>');
+});
 this.$ = this.jQuery = jQuery.noConflict(true);
 let _ctLastCount = 0;
 let _ctCacheturUser = "";
@@ -54,7 +57,8 @@ let _initialized = false;
 let _ctNewMapActiveCache = "";
 let _codenm = "";
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
-
+$("#gc-header, #GCHeader").show();
+$("gclh_nav").css("display","none");
 let pathname = window.location.pathname;
 let domain = document.domain;
 
@@ -70,6 +74,7 @@ else if (domain === "project-gc.com" && pathname.indexOf("/User/VirtualGPS") > -
 else if (domain === "project-gc.com") {
     _ctPage = "pgc_map";
 }
+
 
 console.log("Running in " + _ctPage + " mode");
 
@@ -116,7 +121,8 @@ function loadTranslations() {
             console.log("Translation fetched successfully");
             ctStart();
         });
-}
+  }
+
 
 function ctStart() {
     let lastUse = GM_getValue("cachetur_last_action", 0);
@@ -124,15 +130,7 @@ function ctStart() {
     console.log("The Cachetur Assistant was last used " + timeSinceLastUse + " seconds ago");
 
     if(timeSinceLastUse > 3600) {
-        if(_ctPage === "gc_map_new" ) {
-            waitForKeyElements(".user-menu,.profile-panel", function() {
-                ctInitInactive();
-            });
-        } else {
-
             ctInitInactive();
-                }
-
     } else {
         ctPreInit();
     }
@@ -239,7 +237,7 @@ function ctInit() {
 
 function ctInitNotLoggedIn() {
     if(_initialized) return;
-
+   setTimeout(function (){
     if(_ctPage === "gc_geocache" || _ctPage === "gc_bmlist") GM_addStyle("nav .wrapper { max-width: unset; } #cachetur-header { padding: 8px 1em 22px 2em; } #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px;  } ");
     else if(_ctPage === "gc_map_new") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
     else if(_ctPage === "gc_map") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
@@ -249,13 +247,14 @@ function ctInitNotLoggedIn() {
     ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> '+ i18next.t ('menu.notloggedin')+'<br>'+i18next.t('menu.deactivated')+'</span></li>');
 
     _initialized = true;
+      }, 1500);
+
 }
 
 function ctInitInactive() {
     if(_initialized) return;
-setTimeout(function (){
+    setTimeout(function (){
     console.log("Assistant not being actively used, disabling");
-
     if(_ctPage === "gc_geocache" || _ctPage === "gc_bmlist") GM_addStyle("nav .wrapper { max-width: unset; } #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-header { padding: 8px 1em 22px 2em; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left;  } ");
     else if(_ctPage === "gc_map") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; }");
     else if(_ctPage === "gc_map_new") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; }");
@@ -286,11 +285,11 @@ function ctPrependToHeader(data) {
     console.log("Injecting cachetur.no in menu");
 
     let header;
-    if(_ctPage === "gc_map") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
+    if(_ctPage === "gc_map") header = $('.user-menu');
     else if(_ctPage === "gc_map_new") header = $('.user-menu,.profile-panel');
-    else if(_ctPage === "gc_bmlist") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
-    else if(_ctPage === "gc_geocache") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
-    else if(_ctPage === "gc_geotour") header = $('.user-menu,#ctl00_uxLoginStatus_divSignedIn');
+    else if(_ctPage === "gc_bmlist") header = $('.user-menu');
+    else if(_ctPage === "gc_geocache") header = $('.user-menu');
+    else if(_ctPage === "gc_geotour") header = $('.user-menu');
     else if(_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
 
     if(header) {
@@ -313,8 +312,9 @@ function ctPrependTouser(data) {
 }
 
 function ctCreateTripList() {
-    if (_ctCacheturUser === "") return;
+    setTimeout(function (){
 
+    if (_ctCacheturUser === "") return;
     ctApiCall("planlagt_list_editable", {includetemplates: "true"},
         function (available) {
             let options = "";
@@ -424,6 +424,8 @@ function ctCreateTripList() {
             });
         }
     );
+            }, 1500);
+
 }
 
 function ctGetAddedCodes(id) {
@@ -647,7 +649,7 @@ function ctInitAddLinks() {
             break;
         case "gc_map":
             $("#form1").bind("DOMSubtreeModified", ctMapBindToDOMChanges);
-            if (document.querySelector("script[src*='//maps.googleapis.com/']")){
+           if (document.querySelector("script[src*='//maps.googleapis.com/']")){
                 waitForKeyElements(".map-cta", function () {
                     $(".map-wrapper").append('<large style="color: red; position: absolute; top: 62px; right: 25px;">'+ i18next.t('alerts.google') + '</large>');
                 });
