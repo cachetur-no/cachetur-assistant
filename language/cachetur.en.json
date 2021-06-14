@@ -41,6 +41,7 @@
   },
   "alerts": {
     "browsemap": "Select browse map to add caches from map",
+    "gclh2": "You need to disable GCLH2 script to fully use the cachetur assistant",
     "google": "You have to switch from google to leafleat maps in order for the assistant to work"
    },
    "lists": {
