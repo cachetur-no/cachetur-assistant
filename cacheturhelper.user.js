@@ -42,7 +42,7 @@
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
 waitForKeyElements("gclh_nav", function() {
-$("body,.app-content").prepend('<div style="text-align: center; background-color: yellow; font-weight: bold; color: red;">Script incompaptible: You need to disable GCLH2 to take advantage of the Cachetur Assistant</div>');
+$("body,.app-content").prepend('<div style="text-align: center; background-color: yellow; font-weight: bold; color: red;">'+i18next.t('alerts.gclh2')+'</div>');
 });
 this.$ = this.jQuery = jQuery.noConflict(true);
 let _ctLastCount = 0;
