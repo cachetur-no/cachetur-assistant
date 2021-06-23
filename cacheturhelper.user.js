@@ -4,7 +4,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.3
+// @version         3.5.0.4
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -41,9 +41,7 @@
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
 // ==/UserScript==
-waitForKeyElements("gclh_nav", function() {
-$("body,.app-content").prepend('<div style="text-align: center; background-color: yellow; font-weight: bold; color: red;">'+i18next.t('alerts.gclh2')+'</div>');
-});
+
 this.$ = this.jQuery = jQuery.noConflict(true);
 let _ctLastCount = 0;
 let _ctCacheturUser = "";
@@ -122,7 +120,12 @@ function loadTranslations() {
             ctStart();
         });
   }
+setTimeout(function (){
 
+ waitForKeyElements("gclh_nav", function() {
+$("body,.app-content").prepend('<div style="text-align: center; background-color: yellow; font-weight: bold; color: red;">'+i18next.t('alerts.gclh2')+'</div>');
+});
+      }, 5500);
 
 function ctStart() {
     let lastUse = GM_getValue("cachetur_last_action", 0);
