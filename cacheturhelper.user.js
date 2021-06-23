@@ -39,7 +39,9 @@
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
 // @require         https://unpkg.com/i18next-browser-languagedetector@4.2.0/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
-// @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
+// @updateURL       https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.meta.js
+// @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
+// @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
 
 this.$ = this.jQuery = jQuery.noConflict(true);
