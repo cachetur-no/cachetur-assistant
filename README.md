@@ -11,6 +11,7 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
 ### Version 3.5.0.4
 Moday 23. Jun 2021 15:01
 - Fixed bug in GCLH2 warning
+- Moved the Assistant from cachetur.no to Github.com
  
 ### Version 3.5.0.3
 Moday 14. Jun 2021 15:15
