@@ -163,20 +163,24 @@ function ctPreInit() {
 
 function ctCheckLogin() {
     console.log("Checking login");
+   setTimeout(function (){
 
-    _ctCacheturUser = ctApiCall("user_get_current", "", function(response) {
+        _ctCacheturUser = ctApiCall("user_get_current", "", function(response) {
         _ctCacheturUser = response.username;
         _ctLanguage = response.language;
         i18next.changeLanguage(_ctLanguage);
         if ($('#GClh_II_running')[0] && $('gclh_nav#ctl00_gcNavigation')[0]) {
+
         if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTousergclh('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
         if (_ctCacheturUser === "thomfre") ctPrependTousergclh('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
 
         }else{
+
         if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /></li><li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
         if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
 
         }
+
 
         if (_ctCacheturUser === undefined || _ctCacheturUser === '') {
             console.log("Not logged in");
@@ -190,6 +194,8 @@ function ctCheckLogin() {
 
             }
     );
+             }, 1500);
+
 }
 
 
@@ -338,11 +344,11 @@ function ctPrependTouser(data) {
 
     if(header) {
         header.append(data);
-        waitForKeyElements("#pgc", function() {
+         waitForKeyElements("#pgc", function() {
         $("#cachetur-header1").remove();
         $("#cachetur-header1").remove();
 
-         });
+            });
     }
 
 }
