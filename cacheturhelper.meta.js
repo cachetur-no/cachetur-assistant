@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.4
+// @version         3.5.0.5
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -33,5 +33,5 @@
 // @require         https://unpkg.com/i18next@15.1.3/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
 // @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
-// @downloadURL     https://cachetur.no/monkey/cacheturhelper.user.js
+// @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
 // ==/UserScript==
