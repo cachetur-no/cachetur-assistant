@@ -8,7 +8,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
-### Version 3.5.0.
+### Version 3.5.0.6
+Monday 12. Jul 2021 02:19
+- Made assistant display the trip route on the RV sites map, for better planning
+
+### Version 3.5.0.5
 Thursday 24. Jun 2021 20:30
 - Made assistant compatible with GCLH2
  
