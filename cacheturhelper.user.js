@@ -4,7 +4,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.6
+// @version         3.5.0.7
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -45,6 +45,7 @@
 // @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
 this.$ = this.jQuery = jQuery.noConflict(true);
+let path = window.location.pathname;
 let _ctLastCount = 0;
 let _ctCacheturUser = "";
 let _ctLanguage = "en";
@@ -68,8 +69,7 @@ if (domain === "www.geocaching.com" || domain === "www.geocaching.com") {
     else if (pathname.indexOf("/play/map") > -1) _ctPage = "gc_map_new";
     else if (pathname.indexOf("/geotours/") > -1) _ctPage = "gc_geotour";
 }
-//else if (domain === "cachetur.no" && pathname.indexOf("/bobilplasser/") > -1) _ctPage = "bobil";
-else if (pathname.indexOf('https://cachetur.no/bobilplasser')) _ctPage = "bobil";
+else if (path.match(/^\/bobilplasser\/*/) !== null) { _ctPage = "bobil"}
 else if (domain === "project-gc.com" && pathname.indexOf("/User/VirtualGPS") > -1 && window.location.search.indexOf("?map=") === -1) _ctPage = "pgc_vgps";
 else if (domain === "project-gc.com") {
     _ctPage = "pgc_map";
