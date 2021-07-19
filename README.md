@@ -8,6 +8,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+### Version 3.5.0.7
+Monday 19. Jul 2021 21:45
+
+-Fixxed issue with the assistant on PGC maps
+
 ### Version 3.5.0.6
 Monday 12. Jul 2021 02:19
 - Made assistant display the trip route on the RV sites map, for better planning
