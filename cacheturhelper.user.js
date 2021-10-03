@@ -4,7 +4,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.7
+// @version         3.5.0.8
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -36,9 +36,9 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next@19.4.5/i18next.min.js
+// @require         https://unpkg.com/i18next@20.5.0/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
-// @require         https://unpkg.com/i18next-browser-languagedetector@4.2.0/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.2/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @updateURL       https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.meta.js
 // @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
@@ -57,6 +57,15 @@ let _cacheLayer = [];
 let _initialized = false;
 let _ctNewMapActiveCache = "";
 let _codenm = "";
+function wait4containers() {
+        let mapNode = document.querySelector("div.map-container, .leaflet-container, #mainContainer, .section-controls");
+        if(mapNode == null) {
+            console.log("Map object not ready");
+            // the node doesn't exist yet, wait and try again
+            window.setTimeout(wait4containers, 300);
+            return;
+        }
+console.log("Map object ready");
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
 let pathname = window.location.pathname;
 let domain = document.domain;
@@ -78,7 +87,6 @@ else if (domain === "project-gc.com") {
 console.log("Running in " + _ctPage + " mode");
 
 if (_ctPage === "gc_map_new") {
-        setTimeout(function() {
 
     console.log("Doing dirty trick to take over Geocaching.com's leaflet object");
     let originalLMap = L.Map;
@@ -89,7 +97,6 @@ if (_ctPage === "gc_map_new") {
         ctFixNewGcMapIssues();
         return unsafeWindow.cacheturGCMap;
     };
-                }, 3500);
 
 }
 
@@ -167,7 +174,6 @@ function ctPreInit() {
 
 function ctCheckLogin() {
     console.log("Checking login");
-    setTimeout(function() {
 
         _ctCacheturUser = ctApiCall("user_get_current", "", function(response) {
             _ctCacheturUser = response.username;
@@ -195,7 +201,6 @@ function ctCheckLogin() {
             }
 
         });
-    }, 1500);
 
 }
 
@@ -254,7 +259,6 @@ function ctInit() {
 
 function ctInitNotLoggedIn() {
     if (_initialized) return;
-    setTimeout(function() {
         if (_ctPage === "gc_geocache" || _ctPage === "gc_bmlist" || _ctPage === "bobil") GM_addStyle("nav .wrapper { max-width: unset; } #cachetur-header { padding: 8px 1em 22px 2em; } #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px;  } ");
         else if (_ctPage === "gc_map_new") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
         else if (_ctPage === "gc_map") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
@@ -304,12 +308,10 @@ function ctInitNotLoggedIn() {
 
 
         _initialized = true;
-    }, 1500);
 
 }
 
 function ctInitInactive() {
-    setTimeout(function() {
 
         if (_initialized) return;
         console.log("Assistant not being actively used, disabling");
@@ -339,7 +341,6 @@ function ctInitInactive() {
             });
         }
         _initialized = true;
-    }, 2500);
 
 }
 
@@ -418,7 +419,6 @@ function ctPrependTousergclh(data) {
 }
 
 function ctCreateTripList() {
-    setTimeout(function() {
 
         if (_ctCacheturUser === "") return;
         ctApiCall("planlagt_list_editable", {
@@ -538,7 +538,6 @@ function ctCreateTripList() {
                 });
             }
         );
-    }, 1500);
 
 }
 
@@ -1439,3 +1438,5 @@ function ctFixNewGcMapIssues() {
         $("#clear-map-control").trigger("click");
     });
 }
+}
+    wait4containers();
