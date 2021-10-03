@@ -1,9 +1,9 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.7
+// @version         3.5.0.8
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -30,8 +30,9 @@
 // @run-at          document-start
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next@15.1.3/i18next.min.js
-// @require         https://unpkg.com/i18next-xhr-backend/i18nextXHRBackend.js
-// @require         https://unpkg.com/i18next-browser-languagedetector/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next@20.5.0/i18next.min.js
+// @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
+// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.2/i18nextBrowserLanguageDetector.js
+// @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
 // ==/UserScript==
