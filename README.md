@@ -8,6 +8,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+### Version 3.5.0.9
+Thursday 10. Feb 2022 07:02
+
+-Fixxed issue with the assistant on search map
+
 ### Version 3.5.0.7
 Monday 19. Jul 2021 21:45
 
