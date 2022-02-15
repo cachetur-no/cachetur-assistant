@@ -8,6 +8,16 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+### Version 3.5.0.92
+Thursday 10. Feb 2022 07:02
+
+-Improved behaviour between The Cachetur Assistant and the DeLormeGridOverlay script
+
+### Version 3.5.0.91
+Friday 11. Feb 2022 07:02
+
+-Fixed a small error in 3.5.0.9
+
 ### Version 3.5.0.9
 Thursday 10. Feb 2022 07:02
 
