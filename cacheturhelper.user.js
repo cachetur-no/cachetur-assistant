@@ -4,7 +4,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.91
+// @version         3.5.0.92
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -88,17 +88,19 @@ console.log("Running in " + _ctPage + " mode");
 
 if (_ctPage === "gc_map_new") {
 
-    console.log("Doing dirty trick to take over Geocaching.com's leaflet object");
-    let originalLMap = L.Map;
-
-    L.Map = function(div, settings) {
-        unsafeWindow.cacheturGCMap = new originalLMap(div, settings);
-        L.Map = originalLMap;
-        ctFixNewGcMapIssues();
-        return unsafeWindow.cacheturGCMap;
-    };
-
-}
+  console.log("Doing dirty trick to take over Geocaching.com's leaflet object");
+    if (unsafeWindow.gcMap) {
+        unsafeWindow.cacheturGCMap = unsafeWindow.gcMap;
+    } else {
+        let originalLMap = L.Map;
+        L.Map = function(div, settings) {
+            unsafeWindow.cacheturGCMap = new originalLMap(div, settings);
+            L.Map = originalLMap;
+            ctFixNewGcMapIssues();
+            unsafeWindow.gcMap = unsafeWindow.cacheturGCMap;
+            return unsafeWindow.cacheturGCMap;
+        };
+    }
 
 $(document).ready(function() {
     loadTranslations();
