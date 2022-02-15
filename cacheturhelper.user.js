@@ -4,7 +4,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.92
+// @version         3.5.0.93
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -99,7 +99,7 @@ if (_ctPage === "gc_map_new") {
             ctFixNewGcMapIssues();
             unsafeWindow.gcMap = unsafeWindow.cacheturGCMap;
             return unsafeWindow.cacheturGCMap;
-        };
+        }};
     }
 
 $(document).ready(function() {
