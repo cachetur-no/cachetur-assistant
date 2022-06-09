@@ -4,25 +4,25 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.93
+// @version         3.5.0.94
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
-// @include         https://www.geocaching.com/play/map*
-// @include         http://www.geocaching.com/play/map*
-// @include         https://www.geocaching.com/map/*
-// @include         http://www.geocaching.com/map/*
-// @include         https://www.geocaching.com/play/map*
-// @include         http://www.geocaching.com/play/map*
-// @include         https://www.geocaching.com/geocache/*
-// @include         http://www.geocaching.com/geocache/*
-// @include         https://www.geocaching.com/seek/cache_details.aspx*
-// @include         https://www.geocaching.com/plan/lists/BM*
-// @include         http://www.geocaching.com/play/geotours/*
-// @include         https://www.geocaching.com/play/geotours/*
-// @include         http://project-gc.com/*
-// @include         https://project-gc.com/*
-// @include         http*://cachetur.no/bobilplasser
+// @match         https://www.geocaching.com/play/map*
+// @match         http://www.geocaching.com/play/map*
+// @match         https://www.geocaching.com/map/*
+// @match         http://www.geocaching.com/map/*
+// @match         https://www.geocaching.com/play/map*
+// @match         http://www.geocaching.com/play/map*
+// @match         https://www.geocaching.com/geocache/*
+// @match         http://www.geocaching.com/geocache/*
+// @match         https://www.geocaching.com/seek/cache_details.aspx*
+// @match         https://www.geocaching.com/plan/lists/BM*
+// @match         http://www.geocaching.com/play/geotours/*
+// @match         https://www.geocaching.com/play/geotours/*
+// @match         http://project-gc.com/*
+// @match         https://project-gc.com/*
+// @match         http*://cachetur.no/bobilplasser
 // @connect         cachetur.no
 // @connect         cachetur.net
 // @connect         self
@@ -57,15 +57,7 @@ let _cacheLayer = [];
 let _initialized = false;
 let _ctNewMapActiveCache = "";
 let _codenm = "";
-function wait4containers() {
-        let mapNode = document.querySelector("div.map-container, .leaflet-container, #mainContainer, .section-controls");
-        if(mapNode == null) {
-            console.log("Map object not ready");
-            // the node doesn't exist yet, wait and try again
-            window.setTimeout(wait4containers, 300);
-            return;
-        }
-console.log("Map object ready");
+
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
 let pathname = window.location.pathname;
 let domain = document.domain;
@@ -359,7 +351,7 @@ function ctPrependToHeader(data) {
     console.log("Injecting cachetur.no in menu");
 
     let header;
-    if (_ctPage === "gc_map") header = $('.user-menu');
+    if (_ctPage === "gc_map") header = $('.user-menu,#gc-header-root');
     else if (_ctPage === "gc_map_new") header = $('.user-menu');
     else if (_ctPage === "gc_bmlist") header = $('.user-menu');
     else if (_ctPage === "gc_geocache") header = $('.user-menu');
@@ -1130,7 +1122,7 @@ function ctAddSendListButton() {
 }
 
 function ctListSendSelected() {
-    let selected = $(".gc-checkbox.checked").closest("tr").find(".geocache-code");
+    let selected = $('.geocache-table tbody tr input[type="checkbox"]:checked').closest("tr").find(".geocache-code");
 
     if (selected.length > 0) {
         let tur = $("#cachetur-tur-valg").val();
@@ -1440,5 +1432,3 @@ function ctFixNewGcMapIssues() {
         $("#clear-map-control").trigger("click");
     });
 }
-}
-    wait4containers();
