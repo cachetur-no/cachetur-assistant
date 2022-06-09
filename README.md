@@ -8,6 +8,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+### Version 3.5.0.94
+Thursday 09. Jun 2022 16:02
+
+-Fixed Issue with the lists function, and temporary “ugly fix” for the browsemap
+
 ### Version 3.5.0.92
 Thursday 10. Feb 2022 07:02
 
