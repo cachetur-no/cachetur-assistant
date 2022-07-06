@@ -8,6 +8,13 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+
+### Version 3.5.0.9
+Wednesday 06. Jul 2022 21:32
+
+-Removed “ugly fix” for the browsemap, after Groundspeak repaired their own header
+
+
 ### Version 3.5.0.94
 Thursday 09. Jun 2022 16:02
 
