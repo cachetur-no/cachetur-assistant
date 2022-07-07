@@ -46,5 +46,10 @@
    },
    "lists": {
      "in": "This cache is found in these templates, lists or trips that you own or follow on cachetur.no"
+   },
+  "refresh": {
+     "tomany": "Too many searches per minute, please try again in",
+    "s": "s"
+    
    }
 }
