@@ -1,22 +1,28 @@
 // ==UserScript==
+/* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto */
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.95
+// @version         3.5.0.96
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
-// @include         https://www.geocaching.com/map/*
-// @include         http://www.geocaching.com/map/*
-// @include         https://www.geocaching.com/geocache/*
-// @include         http://www.geocaching.com/geocache/*
-// @include         https://www.geocaching.com/seek/cache_details.aspx*
-// @include         https://www.geocaching.com/bookmarks/view.aspx*
-// @include         http://www.geocaching.com/play/geotours/*
-// @include         https://www.geocaching.com/play/geotours/*
-// @include         http://project-gc.com/*
-// @include         https://project-gc.com/*
+// @match           https://www.geocaching.com/play/map*
+// @match           http://www.geocaching.com/play/map*
+// @match           https://www.geocaching.com/map/*
+// @match           http://www.geocaching.com/map/*
+// @match           https://www.geocaching.com/play/map*
+// @match           http://www.geocaching.com/play/map*
+// @match           https://www.geocaching.com/geocache/*
+// @match           http://www.geocaching.com/geocache/*
+// @match           https://www.geocaching.com/seek/cache_details.aspx*
+// @match           https://www.geocaching.com/plan/lists/BM*
+// @match           http://www.geocaching.com/play/geotours/*
+// @match           https://www.geocaching.com/play/geotours/*
+// @match           http://project-gc.com/*
+// @match           https://project-gc.com/*
+// @match           http*://cachetur.no/*
 // @connect         cachetur.no
 // @connect         cachetur.net
 // @connect         self
@@ -27,12 +33,14 @@
 // @grant           GM_openInTab
 // @grant           GM_addStyle
 // @grant           unsafeWindow
-// @run-at          document-start
+// @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next@20.5.0/i18next.min.js
+// @require         https://unpkg.com/i18next@21.8.13/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
-// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.2/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.4/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
+// @updateURL       https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.meta.js
 // @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
+// @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
