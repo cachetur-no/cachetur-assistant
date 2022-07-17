@@ -4,25 +4,25 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.95
+// @version         3.5.0.96
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
-// @match         https://www.geocaching.com/play/map*
-// @match         http://www.geocaching.com/play/map*
-// @match         https://www.geocaching.com/map/*
-// @match         http://www.geocaching.com/map/*
-// @match         https://www.geocaching.com/play/map*
-// @match         http://www.geocaching.com/play/map*
-// @match         https://www.geocaching.com/geocache/*
-// @match         http://www.geocaching.com/geocache/*
-// @match         https://www.geocaching.com/seek/cache_details.aspx*
-// @match         https://www.geocaching.com/plan/lists/BM*
-// @match         http://www.geocaching.com/play/geotours/*
-// @match         https://www.geocaching.com/play/geotours/*
-// @match         http://project-gc.com/*
-// @match         https://project-gc.com/*
-// @match         http*://cachetur.no/bobilplasser
+// @match           https://www.geocaching.com/play/map*
+// @match           http://www.geocaching.com/play/map*
+// @match           https://www.geocaching.com/map/*
+// @match           http://www.geocaching.com/map/*
+// @match           https://www.geocaching.com/play/map*
+// @match           http://www.geocaching.com/play/map*
+// @match           https://www.geocaching.com/geocache/*
+// @match           http://www.geocaching.com/geocache/*
+// @match           https://www.geocaching.com/seek/cache_details.aspx*
+// @match           https://www.geocaching.com/plan/lists/BM*
+// @match           http://www.geocaching.com/play/geotours/*
+// @match           https://www.geocaching.com/play/geotours/*
+// @match           http://project-gc.com/*
+// @match           https://project-gc.com/*
+// @match           http*://cachetur.no/*
 // @connect         cachetur.no
 // @connect         cachetur.net
 // @connect         self
@@ -36,9 +36,9 @@
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
 // @require         https://code.jquery.com/jquery-latest.js
-// @require         https://unpkg.com/i18next@20.5.0/i18next.min.js
+// @require         https://unpkg.com/i18next@21.8.13/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
-// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.2/i18nextBrowserLanguageDetector.js
+// @require         https://unpkg.com/i18next-browser-languagedetector@6.1.4/i18nextBrowserLanguageDetector.js
 // @require         https://gist.github.com/raw/2625891/waitForKeyElements.js
 // @updateURL       https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.meta.js
 // @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
@@ -48,7 +48,7 @@ this.$ = this.jQuery = jQuery.noConflict(true);
 let path = window.location.pathname;
 let _ctLastCount = 0;
 let _ctCacheturUser = "";
-let _ctLanguage = "en";
+let _ctLanguage = "";
 let _ctCodesAdded = [];
 let _ctPage = "unknown";
 let _routeLayer = [];
@@ -68,13 +68,17 @@ if (domain === "www.geocaching.com" || domain === "www.geocaching.com") {
     else if (pathname.indexOf("/geocache/") > -1) _ctPage = "gc_geocache";
     else if (pathname.indexOf("/map/") > -1) _ctPage = "gc_map";
     else if (pathname.indexOf("/play/map") > -1) _ctPage = "gc_map_new";
-    else if (pathname.indexOf("/geotours/") > -1) _ctPage = "gc_geotour";
+    else if (pathname.indexOf("/play/geotours/") > -1) _ctPage = "gc_geotour";
+   // else if (path.match(/^\/geotours\/*/) !== null) { _ctPage = "gc_geotour"}
 }
 else if (path.match(/^\/bobilplasser\/*/) !== null) { _ctPage = "bobil"}
+else if (path.match(/^\/fellestur\/*/) !== null) { _ctPage = "fellestur"}
 else if (domain === "project-gc.com" && pathname.indexOf("/User/VirtualGPS") > -1 && window.location.search.indexOf("?map=") === -1) _ctPage = "pgc_vgps";
 else if (domain === "project-gc.com") {
     _ctPage = "pgc_map";
 }
+
+window.onload = function(){
 
 console.log("Running in " + _ctPage + " mode");
 
@@ -106,6 +110,7 @@ function loadTranslations() {
             whitelist: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
             preload: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
             fallbackLng: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
+            'lng': navigator.language || navigator.userLanguage,
             ns: ['cachetur'],
             defaultNS: 'cachetur',
             backend: {
@@ -115,14 +120,15 @@ function loadTranslations() {
         }, (err, t) => {
             if (err) {
                 if (err.indexOf("failed parsing" > -1)) {
-                    i18next.changeLanguage('en-US');
+                    i18next.changeLanguage('en');
 
                     return loadTranslations();
                 }
                 return console.log("Error occurred when loading language data", err);
             }
 
-            console.log("Translation fetched successfully");
+            console.log("Translation fetched successfully " +' '+ i18next.resolvedLanguage);
+
             ctStart();
         });
 }
@@ -173,19 +179,25 @@ function ctCheckLogin() {
             _ctCacheturUser = response.username;
             _ctLanguage = response.language;
             i18next.changeLanguage(_ctLanguage);
+            console.log('Detected' +' '+ i18next.resolvedLanguage + ' as cachetur language, so switched to that')
             if ($('#GClh_II_running')[0] && $('gclh_nav#ctl00_gcNavigation')[0]) {
 
                 if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTousergclh('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
-                if (_ctCacheturUser === "thomfre") ctPrependTousergclh('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
+                if (_ctCacheturUser === "thomfre") ctPrependTousergclh('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Captain  PPL(A)" + '</li>');
 
             } else {
 
                 if (_ctCacheturUser === "cghove" || _ctCacheturUser === "Heltinnen" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "Don Rodolphos" || _ctCacheturUser === "platoaddict" || _ctCacheturUser === "rragan" || _ctCacheturUser === "twlare" || _ctCacheturUser === "GorgonVaktmester" || _ctCacheturUser === "Olet" || _ctCacheturUser === "footie77" || _ctCacheturUser === "HikingSeal" || _ctCacheturUser === "Vatvedt" || _ctCacheturUser === "kawlii" || _ctCacheturUser === "Kittykatch" || _ctCacheturUser === "anirt" || _ctCacheturUser === "QuoX" || _ctCacheturUser === "flower6871" || _ctCacheturUser === "juliekatrine") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /></li><li id="cachetur-header1"><span id="cachetur-header-text">' + "Ambassador" + '</li>');
-                if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Master & Commander" + '</li>');
+                if (_ctCacheturUser === "thomfre") ctPrependTouser('<li id="cachetur-header1"><span id="cachetur-header-text">' + "Captain  PPL(A)" + '</li>');
 
             }
 
-
+                if (_ctPage === "gc_map_new") {
+                if (_ctCacheturUser === "thomfre" || _ctCacheturUser === "cghove" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "GorgonVaktmester") $(document).attr("title", "Crap map");
+            }
+                if (_ctPage === "gc_map") {
+                if (_ctCacheturUser === "thomfre" || _ctCacheturUser === "cghove" || _ctCacheturUser === "Korsgat" || _ctCacheturUser === "GorgonVaktmester") $(document).attr("title", "Best map");
+            }
             if (_ctCacheturUser === undefined || _ctCacheturUser === '') {
                 console.log("Not logged in");
                 ctInitNotLoggedIn();
@@ -211,6 +223,7 @@ function ctApiCall(call, params, callback) {
         method: "POST",
         url: "https://cachetur.no/api/" + call,
         data: "appid=" + encodeURIComponent(appId) + "&json=" + encodeURIComponent(JSON.stringify(params)),
+        crossDomain: true,
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
@@ -316,6 +329,7 @@ function ctInitInactive() {
         else if (_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 12px; }");
 
         if ($('#GClh_II_running')[0] && $('gclh_nav#ctl00_gcNavigation')[0]) {
+
             ctPrependToHeader2('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">' + i18next.t("activate.button") + '</a></li>');
             $('#cachetur-activate')[0].onclick = function() {
                 GM_setValue("cachetur_last_action", Date.now());
@@ -325,6 +339,7 @@ function ctInitInactive() {
                 GM_setValue("cachetur_last_action", Date.now());
             });
         } else {
+
             ctPrependToHeader('<li id="cachetur-header"><span id="cachetur-header-text"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> <a href id="cachetur-activate">' + i18next.t("activate.button") + '</a></li>');
             $('#cachetur-activate')[0].onclick = function() {
                 GM_setValue("cachetur_last_action", Date.now());
@@ -349,9 +364,7 @@ function ctPGCMapInit() {
 
 function ctPrependToHeader(data) {
     console.log("Injecting cachetur.no in menu");
-    waitForKeyElements (
-            "div.user-menu"
-        );
+    waitForKeyElements ("div.user-menu");
   $(".hamburger--squeeze").remove();
     let header;
     if (_ctPage === "gc_map") header = $('.user-menu');
@@ -369,13 +382,12 @@ function ctPrependToHeader(data) {
 
 function ctPrependToHeader2(data) {
     console.log("Injecting cachetur.no in menu");
-
     let header;
-    if (_ctPage === "gc_map") header = $('#ctl00_uxLoginStatus_divSignedIn');
-    else if (_ctPage === "gc_map_new") header = $('#ctl00_uxLoginStatus_divSignedIn');
-    else if (_ctPage === "gc_bmlist") header = $('#ctl00_uxLoginStatus_divSignedIn');
-    else if (_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn');
-    else if (_ctPage === "gc_geotour") header = $('#ctl00_uxLoginStatus_divSignedIn');
+    if (_ctPage === "gc_map") header = $('#ctl00_uxLoginStatus_divSignedIn'), GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
+    else if (_ctPage === "gc_map_new") header = $('#ctl00_uxLoginStatus_divSignedIn'), GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
+    else if (_ctPage === "gc_bmlist") header = $('#ctl00_uxLoginStatus_divSignedIn'), GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
+    else if (_ctPage === "gc_geocache") header = $('#ctl00_uxLoginStatus_divSignedIn'), GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
+    else if (_ctPage === "gc_geotour") header = $('#ctl00_uxLoginStatus_divSignedIn'), GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
     else if (_ctPage === "bobil") header = $('.navbar-right');
     else if (_ctPage === "pgc_map" || _ctPage === "pgc_vgps") header = $('#pgcMainMenu ul.navbar-right');
 
@@ -430,7 +442,7 @@ function ctCreateTripList() {
                     });
                 }
 
-                if (_ctPage === "gc_geocache") GM_addStyle("#gc-header button {border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s;display: flex;justify-content: center;align-items: center;} #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;}  #cachetur-header { ;padding-top:8px; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } .css-az98zw nav {    -webkit-box-align: center; align-items: center; box-sizing: border-box; display: flex; min-height: 80px; overflow: visible; padding: 0px 12px; width: 100vw; position: relative !important; max-width: 100%; padding: 0px 32px; font-size: 16px;} .cachetur-menu-button { border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s; display: flex; justify-content: center; align-items: center; background-color: #eee; padding-right: 4px; padding-left: 4px; border: 1px solid rgba(0,0,0,0.1); height: 24px; width: 24px; float:left;} #cachetur-header-text { padding-right: 3px; float:left; } #cachetur-tur-antall-container { float: right; margin-top: 2px; padding-left: 3px;.cachetur-add-code { background-image: url(https://cachetur.no/api/img/cachetur-15.png); } .cachetur-add-code-success { background-image: url(https://cachetur.no/api/img/cachetur-15-success.png); } .cachetur-add-code-error { background-image: url(https://cachetur.no/api/img/cachetur-15-error.png); } .cachetur-set-pri-1 { background-image: url(https://cachetur.no/api/img/p1.png); } .cachetur-set-pri-1-success { background-image: url(https://cachetur.no/api/img/p1_success.png); } .cachetur-set-pri-1-error { background-image: url(https://cachetur.no/api/img/p1_error.png); } .cachetur-set-pri-2 { background-image: url(https://cachetur.no/api/img/p2.png); } .cachetur-set-pri-2-success { background-image: url(https://cachetur.no/api/img/p2_success.png); } .cachetur-set-pri-2-error { background-image: url(https://cachetur.no/api/img/p2_error.png); } .cachetur-set-pri-3 { background-image: url(https://cachetur.no/api/img/p3.png); } .cachetur-set-pri-3-success { background-image: url(https://cachetur.no/api/img/p3_success.png); } .cachetur-set-pri-3-error { background-image: url(https://cachetur.no/api/img/p3_error.png); } .cachetur-add-comment { background-image: url(https://cachetur.no/api/img/cachetur-comment.png); } .cachetur-add-comment-success { background-image: url(https://cachetur.no/api/img/cachetur-comment-success.png); } .cachetur-add-comment-error { background-image: url(https://cachetur.no/api/img/cachetur-comment-error.png); }");
+                if (_ctPage === "gc_geocache") GM_addStyle("#gc-header button {border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s;display: flex;justify-content: center;align-items: center;} #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} select {/* -webkit-appearance: none; */ -moz-appearance: none; /* appearance: none; */ background: #fffurl(../ui-icons/icons/global/caret-down.svg) no-repeat;/* background-position: 98% 50%; */   /* background-position: calc(100% - 12px) 50%; */   /* background-size: 16px 16px; */   /* border: 1px solid #9b9b9b; */   /* border-radius: 4px; */   /* box-sizing: border-box; */   /* color: #4a4a4a; */   /* cursor: pointer; */   /* display: block; */   /* padding: 8px 12px; */   /* padding-right: 40px; */   /* width: 100%; */} #cachetur-header { ;padding-top:8px; } #cachetur-tur-valg { padding: 0px;; appearance: auto; float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } .css-az98zw nav {    -webkit-box-align: center; align-items: center; box-sizing: border-box; display: flex; min-height: 80px; overflow: visible; padding: 0px 12px; width: 100vw; position: relative !important; max-width: 100%; padding: 0px 32px; font-size: 16px;} .cachetur-menu-button { border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s; display: flex; justify-content: center; align-items: center; background-color: #eee; padding-right: 4px; padding-left: 4px; border: 1px solid rgba(0,0,0,0.1); height: 24px; width: 24px; float:left;} #cachetur-header-text { padding-right: 3px; float:left; } #cachetur-tur-antall-container { float: right; margin-top: 2px; padding-left: 3px;.cachetur-add-code { background-image: url(https://cachetur.no/api/img/cachetur-15.png); } .cachetur-add-code-success { background-image: url(https://cachetur.no/api/img/cachetur-15-success.png); } .cachetur-add-code-error { background-image: url(https://cachetur.no/api/img/cachetur-15-error.png); } .cachetur-set-pri-1 { background-image: url(https://cachetur.no/api/img/p1.png); } .cachetur-set-pri-1-success { background-image: url(https://cachetur.no/api/img/p1_success.png); } .cachetur-set-pri-1-error { background-image: url(https://cachetur.no/api/img/p1_error.png); } .cachetur-set-pri-2 { background-image: url(https://cachetur.no/api/img/p2.png); } .cachetur-set-pri-2-success { background-image: url(https://cachetur.no/api/img/p2_success.png); } .cachetur-set-pri-2-error { background-image: url(https://cachetur.no/api/img/p2_error.png); } .cachetur-set-pri-3 { background-image: url(https://cachetur.no/api/img/p3.png); } .cachetur-set-pri-3-success { background-image: url(https://cachetur.no/api/img/p3_success.png); } .cachetur-set-pri-3-error { background-image: url(https://cachetur.no/api/img/p3_error.png); } .cachetur-add-comment { background-image: url(https://cachetur.no/api/img/cachetur-comment.png); } .cachetur-add-comment-success { background-image: url(https://cachetur.no/api/img/cachetur-comment-success.png); } .cachetur-add-comment-error { background-image: url(https://cachetur.no/api/img/cachetur-comment-error.png); }");
                 else if (_ctPage === "gc_bmlist") GM_addStyle("#gc-header button {border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s;display: flex;justify-content: center;align-items: center;} .gc-nav-menu .wrapper { max-width: unset; } #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw; height: fit-content;} #cachetur-header { padding: 8px 1em 22px 2em; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-tur-fitbounds { display: none; } #cachetur-tur-add-ct-caches { display: none; } .cachetur-menu-button { border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s; display: flex; justify-content: center; align-items: center; background-color: #eee; padding-right: 4px; padding-left: 4px; border: 1px solid rgba(0,0,0,0.1); height: 24px; width: 24px; float:left;} #cachetur-header-text { padding-right: 3px; float:left; } #cachetur-tur-antall-container { padding-left: 4px; } .cachetur-add-code { background-image: url(https://cachetur.no/api/img/cachetur-15.png); } .cachetur-add-code-success { background-image: url(https://cachetur.no/api/img/cachetur-15-success.png); } .cachetur-add-code-error { background-image: url(https://cachetur.no/api/img/cachetur-15-error.png); } .cachetur-set-pri-1 { background-image: url(https://cachetur.no/api/img/p1.png); } .cachetur-set-pri-1-success { background-image: url(https://cachetur.no/api/img/p1_success.png); } .cachetur-set-pri-1-error { background-image: url(https://cachetur.no/api/img/p1_error.png); } .cachetur-set-pri-2 { background-image: url(https://cachetur.no/api/img/p2.png); } .cachetur-set-pri-2-success { background-image: url(https://cachetur.no/api/img/p2_success.png); } .cachetur-set-pri-2-error { background-image: url(https://cachetur.no/api/img/p2_error.png); } .cachetur-set-pri-3 { background-image: url(https://cachetur.no/api/img/p3.png); } .cachetur-set-pri-3-success { background-image: url(https://cachetur.no/api/img/p3_success.png); } .cachetur-set-pri-3-error { background-image: url(https://cachetur.no/api/img/p3_error.png); } .cachetur-add-comment { background-image: url(https://cachetur.no/api/img/cachetur-comment.png); } .cachetur-add-comment-success { background-image: url(https://cachetur.no/api/img/cachetur-comment-success.png); } .cachetur-add-comment-error { background-image: url(https://cachetur.no/api/img/cachetur-comment-error.png); }");
                 else if (_ctPage === "gc_map") GM_addStyle("#gc-header button {border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s;display: flex;justify-content: center;align-items: center;} #cachetur-header button { width: 26px; } #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #cachetur-header { ;padding-top:8px; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } .cachetur-menu-button { border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s; display: flex; justify-content: center; align-items: center; background-color: #eee; padding-right: 4px; padding-left: 4px; border: 1px solid rgba(0,0,0,0.1); height: 24px; width: 24px; float:left;} #cachetur-header-text { padding-right: 3px; float:left; } #cachetur-tur-antall-container { float: right; margin-top: 2px; padding-left: 3px; }");
                 else if (_ctPage === "gc_map_new") GM_addStyle("#gc-header button {border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s;display: flex;justify-content: center;align-items: center;} #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #cachetur-header { ;padding-top:8px; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } .cachetur-menu-button { border: 2px solid transparent; border-radius: 12px; font-family: Noto Sans, sans-serif; padding: 4px 8px; transition: border-color 0.2s; display: flex; justify-content: center; align-items: center; background-color: #eee; padding-right: 4px; padding-left: 4px; border: 1px solid rgba(0,0,0,0.1); height: 24px; width: 24px; float:left;} #cachetur-header-text { padding-right: 3px; float:left; } #cachetur-tur-antall-container { float: right; margin-top: 2px; padding-left: 3px;.cachetur-add-code { background-image: url(https://cachetur.no/api/img/cachetur-15.png); } .cachetur-add-code-success { background-image: url(https://cachetur.no/api/img/cachetur-15-success.png); } .cachetur-add-code-error { background-image: url(https://cachetur.no/api/img/cachetur-15-error.png); } .cachetur-set-pri-1 { background-image: url(https://cachetur.no/api/img/p1.png); } .cachetur-set-pri-1-success { background-image: url(https://cachetur.no/api/img/p1_success.png); } .cachetur-set-pri-1-error { background-image: url(https://cachetur.no/api/img/p1_error.png); } .cachetur-set-pri-2 { background-image: url(https://cachetur.no/api/img/p2.png); } .cachetur-set-pri-2-success { background-image: url(https://cachetur.no/api/img/p2_success.png); } .cachetur-set-pri-2-error { background-image: url(https://cachetur.no/api/img/p2_error.png); } .cachetur-set-pri-3 { background-image: url(https://cachetur.no/api/img/p3.png); } .cachetur-set-pri-3-success { background-image: url(https://cachetur.no/api/img/p3_success.png); } .cachetur-set-pri-3-error { background-image: url(https://cachetur.no/api/img/p3_error.png); } .cachetur-add-comment { background-image: url(https://cachetur.no/api/img/cachetur-comment.png); } .cachetur-add-comment-success { background-image: url(https://cachetur.no/api/img/cachetur-comment-success.png); } .cachetur-add-comment-error { background-image: url(https://cachetur.no/api/img/cachetur-comment-error.png); }");
@@ -753,8 +765,6 @@ function ctGetUnsafeLeafletObject() {
         return unsafeWindow.MapSettings.Map;
     } else if (_ctPage === "gc_map_new" && unsafeWindow.cacheturGCMap) {
         return unsafeWindow.cacheturGCMap;
-    } else if (_ctPage === "gc_geotour" && unsafeWindow.map) {
-        return unsafeWindow.map;
     } else if (_ctPage === "bobil" && unsafeWindow.map) {
         return unsafeWindow.map;
     } else if (_ctPage === "pgc_map" && unsafeWindow.PGC_LiveMap) {
@@ -1425,15 +1435,182 @@ function ctSetIconForCode(code) {
         }
     );
 }
-
+           // Get url parameter.
+    function getURLParam(key) {
+        var query = window.location.search.substring(1);
+        var pairs = query.split('&');
+        for (let i=0; i<pairs.length; i++) {
+            var pair = pairs[i].split('=');
+            if (pair[0] == key) {
+                if (pair[1].length > 0) return pair[1];
+            }
+        }
+        return undefined;
+    };
 function ctFixNewGcMapIssues() {
     if (window.location.href.indexOf("bm=") > -1) return;
 
     unsafeWindow.cacheturGCMap.on('zoomend', function() {
-        $("#clear-map-control").trigger("click");
+            var latHighG = false;
+            var latLowG = false;
+            var lngHighG = false;
+            var lngLowG = false;
+            var firstRun = true;
+            const ONE_MINUTE_MS = 60*1000;
+            function searchThisArea(waitCount) {
+                if ($('.leaflet-gl-layer.mapboxgl-map')[0] || $('div.gm-style')[0]) { // Leaflet or GM
+                    if (!$('.loading-container.show')[0] && !$('li.active svg.my-lists-toggle-icon')[0] && ($('#clear-map-control')[0] && firstRun)) {
+                        setTimeout(function() {
+                            if ($('.loading-container.show')[0]) return;
+                            var pxHeight = window.innerHeight;
+                            var pxWidth = window.innerWidth;
+                            var lat = parseFloat(getURLParam('lat'));
+                            var lng = parseFloat(getURLParam('lng'));
+                            var zoom = parseInt(getURLParam('zoom'));
+                            var metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+                            var latMeterDistance = metersPerPx * pxHeight;
+                            var lngMeterDistance = metersPerPx * pxWidth;
+                            var latHalfDezDistance = latMeterDistance / 1850 / 60 / 2;
+                            var lngHalfDezDistance = lngMeterDistance / (1850 * Math.cos(lat * Math.PI / 180)) / 60 / 2;
+                            var latHigh = (lat + latHalfDezDistance).toFixed(4);
+                            var latLow = (lat - latHalfDezDistance).toFixed(4);
+                            var lngHigh = (lng + lngHalfDezDistance).toFixed(4);
+                            var lngLow = (lng - lngHalfDezDistance).toFixed(4);
+                            if (latHighG == false || latHigh > latHighG || latLow < latLowG || lngHigh > lngHighG || lngLow < lngLowG) {
+                                latHighG = latHigh;
+                                latLowG = latLow;
+                                lngHighG = lngHigh;
+                                lngLowG = lngLow;
+                                if (!firstRun) {
+                                    let times = JSON.parse(GM_getValue("search_this_area_times", "[]"));
+                                    if (times.length < 9) {
+                                        $('#clear-map-control').click().click();
+                                        times.push(Date.now());
+                                        GM_setValue("search_this_area_times", JSON.stringify(times));
+                                    } else {
+                                        let t = Date.now();
+                                        // check 1min limit
+                                        if ((t - times[0]) > ONE_MINUTE_MS) {
+                                            $('#clear-map-control').click().click();
+                                            times.splice(0, 1);
+                                            times.push(t);
+                                            GM_setValue("search_this_area_times", JSON.stringify(times));
+                                        } else {
+                                            if ($('body.cta-waiting-msg').length === 0) {
+                                                $('body').addClass('cta-waiting-msg');
+                                                var wait = Math.ceil((ONE_MINUTE_MS-(t-times[0]))/1000);
+                                                function countdown(waitTime) {
+                                                    if (waitTime < 1) { 
+                                                        $('#cta-waiting-msg').remove();
+                                                        $('div.loading-container').css('display', 'none').removeClass('show');
+                                                        $('body').removeClass('cta-waiting-msg');
+                                                    } else {
+                                                        $('div.loading-container').css('display', 'flex').addClass('show');
+                                                        $('#cta-waiting-msg').remove();
+                                                        $('.loading-display').append('<span id="cta-waiting-msg" role="alert" aria-live="assertive">' + i18next.t('refresh.tomany ') +' '+ + waitTime + ' ' + i18next.t(' refresh.s') + '</span>');
+
+                                                        setTimeout(function() {countdown(--waitTime);}, 1000);
+                                                    }
+                                                }
+                                                countdown(wait);
+                                            }
+                                        }
+                                    }
+                                }
+                                firstRun = false;
+                            }
+                        }, 400);
+                    }
+                } else {waitCount++; if (waitCount <= 200) setTimeout(function(){searchThisArea(waitCount);}, 50);}
+            }
+            window.history.pushState = new Proxy(window.history.pushState, {
+                apply: (target, thisArg, argArray) => {
+                    searchThisArea(0);
+                    return target.apply(thisArg, argArray);
+                }
+            });
     });
 
     unsafeWindow.cacheturGCMap.on("dragend", function() {
-        $("#clear-map-control").trigger("click");
+            var latHighG = false;
+            var latLowG = false;
+            var lngHighG = false;
+            var lngLowG = false;
+            var firstRun = true;
+            const ONE_MINUTE_MS = 60*1000;
+            function searchThisArea(waitCount) {
+                if ($('.leaflet-gl-layer.mapboxgl-map')[0] || $('div.gm-style')[0]) { // Leaflet or GM
+                    if (!$('.loading-container.show')[0] && !$('li.active svg.my-lists-toggle-icon')[0] && ($('#clear-map-control')[0] || firstRun) ) {
+                        setTimeout(function() {
+                            if ($('.loading-container.show')[0]) return;
+                            var pxHeight = window.innerHeight;
+                            var pxWidth = window.innerWidth;
+                            var lat = parseFloat(getURLParam('lat'));
+                            var lng = parseFloat(getURLParam('lng'));
+                            var zoom = parseInt(getURLParam('zoom'));
+                            var metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+                            var latMeterDistance = metersPerPx * pxHeight;
+                            var lngMeterDistance = metersPerPx * pxWidth;
+                            var latHalfDezDistance = latMeterDistance / 1850 / 60 / 2;
+                            var lngHalfDezDistance = lngMeterDistance / (1850 * Math.cos(lat * Math.PI / 180)) / 60 / 2;
+                            var latHigh = (lat + latHalfDezDistance).toFixed(4);
+                            var latLow = (lat - latHalfDezDistance).toFixed(4);
+                            var lngHigh = (lng + lngHalfDezDistance).toFixed(4);
+                            var lngLow = (lng - lngHalfDezDistance).toFixed(4);
+                            if (latHighG == false || latHigh > latHighG || latLow < latLowG || lngHigh > lngHighG || lngLow < lngLowG) {
+                                latHighG = latHigh;
+                                latLowG = latLow;
+                                lngHighG = lngHigh;
+                                lngLowG = lngLow;
+
+                                if (!firstRun) {
+                                    let times = JSON.parse(GM_getValue("search_this_area_times", "[]"));
+                                    if (times.length < 9) {
+                                        $('#clear-map-control').click().click();
+                                        times.push(Date.now());
+                                        GM_setValue("search_this_area_times", JSON.stringify(times));
+                                    } else {
+                                        let t = Date.now();
+                                        if ((t - times[0]) > ONE_MINUTE_MS) {
+                                            $('#clear-map-control').click().click();
+                                            times.splice(0, 1);
+                                            times.push(t);
+                                            GM_setValue("search_this_area_times", JSON.stringify(times));
+                                        } else {
+                                            if ($('body.cta-waiting-msg').length === 0) {
+                                                $('body').addClass('cta-waiting-msg');
+                                                var wait = Math.ceil((ONE_MINUTE_MS-(t-times[0]))/1000);
+                                                function countdown(waitTime) {
+                                                    if (waitTime < 1) {
+                                                        $('#cta-waiting-msg').remove();
+                                                        $('div.loading-container').css('display', 'none').removeClass('show');
+                                                        $('body').removeClass('cta-waiting-msg');
+                                                    } else {
+                                                        $('div.loading-container').css('display', 'flex').addClass('show');
+                                                        $('#cta-waiting-msg').remove();
+                                                        $('.loading-display').append('<span id="cta-waiting-msg" role="alert" aria-live="assertive">' + i18next.t('refresh.tomany') + ' ' + waitTime + ' ' + i18next.t('refresh.s') + '</span>');
+
+                                                        setTimeout(function() {countdown(--waitTime);}, 1000);
+                                                    }
+                                                }
+                                                countdown(wait);
+                                            }
+                                        }
+                                    }
+                                }
+                                firstRun = false;
+                            }
+                        }, 400);
+                    }
+                } else {waitCount++; if (waitCount <= 200) setTimeout(function(){searchThisArea(waitCount);}, 50);}
+            }
+            window.history.pushState = new Proxy(window.history.pushState, {
+                apply: (target, thisArg, argArray) => {
+                    searchThisArea(0);
+                    return target.apply(thisArg, argArray);
+                }
+            });
     });
+    };
+
 }
