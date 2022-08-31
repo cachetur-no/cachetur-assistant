@@ -1,10 +1,9 @@
 // ==UserScript==
-/* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto */
 // @name            The Cachetur Assistant
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.96
+// @version         3.5.0.97
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -20,9 +19,11 @@
 // @match           https://www.geocaching.com/plan/lists/BM*
 // @match           http://www.geocaching.com/play/geotours/*
 // @match           https://www.geocaching.com/play/geotours/*
+// @match           file:///*/gsak/html/*
+// @match           file:///*/html/*
 // @match           http://project-gc.com/*
 // @match           https://project-gc.com/*
-// @match           http*://cachetur.no/*
+// @match           http*://cachetur.no/bobilplasser
 // @connect         cachetur.no
 // @connect         cachetur.net
 // @connect         self
@@ -44,3 +45,4 @@
 // @downloadURL     https://github.com/cachetur-no/cachetur-assistant/raw/master/cacheturhelper.user.js
 // @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
+/* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto */
