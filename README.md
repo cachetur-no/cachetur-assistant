@@ -13,6 +13,7 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
 Thursday 01. Sept 01:00
 
 -Made the assistant compatible with GSAK's Leaflet Macro
+
 -It will only send GC-Codes to cachetur and nothing else
 
 
