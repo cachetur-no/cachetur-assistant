@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.98
+// @version         3.5.1.01
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -32,10 +32,13 @@
 // @grant           GM_setValue
 // @grant           GM_getValue
 // @grant           GM_openInTab
+// @grant           GM_registerMenuCommand
 // @grant           GM_addStyle
 // @grant           unsafeWindow
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
+// @require         https://raw.githubusercontent.com/sizzlemctwizzle/GM_config/master/gm_config.js
+// @require        https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require         https://code.jquery.com/jquery-latest.js
 // @require         https://unpkg.com/i18next@21.8.13/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
@@ -60,7 +63,6 @@ let _cacheLayer = [];
 let _initialized = false;
 let _ctNewMapActiveCache = "";
 let _codenm = "";
-let tourmap = "map_container";
 
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
 let pathname = window.location.pathname;
@@ -1220,6 +1222,37 @@ function ctAddTogsakLink(gsak) {
     });
 }
 
+    //fake update posted coordinates
+GM_registerMenuCommand('Run this now', function() {
+    alert("Put script's main function here");
+}, 'r');
+    //
+if (_ctPage === "gc_geocache"){
+  $('#ctl00_ContentBody_LocationSubPanel').append('<span class="cachetur-header" span id="copy"> <button id="cp_btn" title="Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates."><img src="https://raw.githubusercontent.com/cghove/bobil/main/l1515.png">Clipboard posted to corrected.<img src="https://raw.githubusercontent.com/cghove/bobil/main/1515.png"></button> </span>');
+document.getElementById("cp_btn").addEventListener("click", copy_password);
+
+function copy_password() {
+  event.preventDefault();
+  var text = $("#uxLatLon").text()
+  console.log(text)
+  var $temp = $("<input>");
+  $("body").append($temp);
+  $temp.val(text).select();
+  document.execCommand("copy");
+  $temp.remove();
+    $("#uxLatLon").trigger("click");
+    waitForKeyElements("#newCoordinates", function() {
+    $('#newCoordinates').val(text);
+    $(".btn-cc-parse").trigger("click");
+        });
+
+
+
+}
+}
+
+
+//end2
 function ctAddToVGPSLink(vgps) {
     if (!vgps.hasClass("cachetur-add")) {
         let cacheLink = vgps.parent().find("a")[0];
