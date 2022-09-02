@@ -47,6 +47,10 @@
    "lists": {
      "in": "This cache is found in these templates, lists or trips that you own or follow on cachetur.no"
    },
+  "edit": {
+     "title": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates",
+    "button": "Clipboard posted to corrected"
+   },
   "refresh": {
      "tomany": "Too many searches per minute, please try again in",
     "s": "s"
