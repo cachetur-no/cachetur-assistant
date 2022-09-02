@@ -9,7 +9,13 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
 ## Release notes
 
 
-### Version 3.5.0.9
+### Version 3.5.1.01
+Saturday 03. Sept 01:39
+
+-Added a button to easily mark coordinates as changed, to get the changed icon on the map, to easily see challenges i qualify for on map
+
+
+### Version 3.5.0.97
 Thursday 01. Sept 01:00
 
 -Made the assistant compatible with GSAK's Leaflet Macro
