@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.0.98
+// @version         3.5.1.01
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -32,10 +32,13 @@
 // @grant           GM_setValue
 // @grant           GM_getValue
 // @grant           GM_openInTab
+// @grant           GM_registerMenuCommand
 // @grant           GM_addStyle
 // @grant           unsafeWindow
 // @run-at          document-end
 // @copyright       2017+, cachetur.no
+// @require         https://raw.githubusercontent.com/sizzlemctwizzle/GM_config/master/gm_config.js
+// @require        https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require         https://code.jquery.com/jquery-latest.js
 // @require         https://unpkg.com/i18next@21.8.13/i18next.min.js
 // @require         https://unpkg.com/i18next-xhr-backend@3.2.2/i18nextXHRBackend.js
