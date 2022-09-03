@@ -6,7 +6,16 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
 
  This script will only work if you select Leaflet as your map provider on geocaching.com.
  
+ Times posted are UTC+1 times
+ 
 ## Release notes
+
+
+### Version 3.5.1.02
+Saturday 04. Sept 00:56
+
+-Bugfix since button introduced in Version 3.5.1.01 and PGC userscript used the same placeholder.
+-Added feature where the button can be turned on/off via submenu, where we select which Tampermonkey scripts to run..
 
 
 ### Version 3.5.1.01
