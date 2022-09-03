@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.1.01
+// @version         3.5.1.02
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -155,6 +155,26 @@ function loadTranslations() {
             ctStart();
         });
 }
+
+    // Menu start
+    var myVar1 = false;
+    let uc1 = GM_getValue(myVar1);
+GM_registerMenuCommand('Toggle clone coordinate button on/off', function() {
+    //GM_setValue(myVar1, true);
+    if (uc1 === false) {
+    GM_setValue(myVar1, true);
+    } else {
+    GM_setValue(myVar1, false);
+    }
+    location.reload();
+}, 't');
+let uc = GM_getValue(myVar1);
+if (uc === true) {
+    updatecoord();
+    } else {
+
+    }
+    //Menu stop
 
 function ctStart() {
 
@@ -1223,12 +1243,9 @@ function ctAddTogsakLink(gsak) {
 }
 
     //fake update posted coordinates
-GM_registerMenuCommand('Run this now', function() {
-    alert("Put script's main function here");
-}, 'r');
-    //
+function updatecoord() {
 if (_ctPage === "gc_geocache"){
-  $('#ctl00_ContentBody_LocationSubPanel').append('<span class="cachetur-header" span id="copy"> <button id="cp_btn" title="Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates."><img src="https://raw.githubusercontent.com/cghove/bobil/main/l1515.png">Clipboard posted to corrected.<img src="https://raw.githubusercontent.com/cghove/bobil/main/1515.png"></button> </span>');
+  $('.LocationData').append('<span class="cachetur-header" span id="copy"> <button id="cp_btn" title="Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates."><img src="https://raw.githubusercontent.com/cghove/bobil/main/l1515.png">Clipboard posted to corrected.<img src="https://raw.githubusercontent.com/cghove/bobil/main/1515.png"></button> </span>');
 document.getElementById("cp_btn").addEventListener("click", copy_password);
 
 function copy_password() {
@@ -1250,6 +1267,8 @@ function copy_password() {
 
 }
 }
+}
+
 
 
 //end2
