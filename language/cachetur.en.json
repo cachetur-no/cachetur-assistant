@@ -55,7 +55,8 @@
     "open": "This feature will open links on cache pages in new tabs.",
     "warning": "It will also disable geocaching.com warning about leaving geocachings domain, for external URL's"
     "dt": "Tell you if the cache you are currently watching is a new D/T for your, if not tell you how many D/T like this one you have already found.",
-    "settings": "Settings"
+    "settings": "Settings",
+    "assistant": "The Cachetur Assistant"
     
    },
   "dt": {
