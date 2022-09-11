@@ -48,8 +48,19 @@
      "in": "This cache is found in these templates, lists or trips that you own or follow on cachetur.no"
    },
   "edit": {
-     "title": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates.",
-    "button": "Clipboard posted to corrected."
+    "toggle": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates.",
+    "default": "Default:",
+    "configure": "Configure",
+    "off": "OFF",
+    "open": "This feature will open links on cache pages in new tabs.",
+    "warning": "It will also disable geocaching.com warning about leaving geocachings domain, for external URL's"
+    "dt": "Tell you if the cache you are currently watching is a new D/T for your, if not tell you how many D/T like this one you have already found."
+    
+   },
+  "dt": {
+    "you": "You have already found",
+    "caches": " with this D/T.",
+    "new": "Go find it, it's a new D/T for you !!"
    },
   "refresh": {
      "tomany": "Too many searches per minute, please try again in",
