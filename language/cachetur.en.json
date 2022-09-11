@@ -48,7 +48,7 @@
      "in": "This cache is found in these templates, lists or trips that you own or follow on cachetur.no"
    },
   "edit": {
-    "toggle": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates.",
+    "toggle": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated coordinates.",
     "default": "Default:",
     "configure": "Configure",
     "off": "OFF",
