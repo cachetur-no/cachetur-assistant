@@ -29,6 +29,10 @@
     "saved": "Priority saved",
     "error": "An error occurred when sending priority to cachetur.no"
   },
+  "corrected": {
+    "title": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates.",
+    "button": "Clipboard posted to corrected."
+  },
   "foundby": "Found by:",
   "vgps": {
     "sendmarked": "Send selected to cachetur.no",
