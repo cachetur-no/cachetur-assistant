@@ -30,7 +30,7 @@
     "error": "An error occurred when sending priority to cachetur.no"
   },
   "corrected": {
-    "title": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated cooedinates.",
+    "title": "Button copies posted coordinates to clipboard, so they can be used to mark cache as having updated coordinates.",
     "button": "Clipboard posted to corrected."
   },
   "foundby": "Found by:",
