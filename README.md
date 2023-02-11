@@ -10,6 +10,11 @@ The Cachetur Assistant should also work with the newest version of Tampermonkey 
  
 ## Release notes
 
+### Version 3.5.1.03
+Monday 6. Feb 2023 20:33
+
+-Added config menu, and updated to latest I18next version
+
 
 ### Version 3.5.1.02
 Saturday 04. Sept 00:56
