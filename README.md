@@ -3,6 +3,7 @@ This script makes it easy to add caches to your trips. You can add caches direct
 
 The script is tested on the newest version of Tampermonkey and Chrome.
 The Cachetur Assistant should also work with the newest version of Tampermonkey and FireFox or in other browsers TamperMonkey support (Edge, Opera Next, Dolphin and UC).
+Safari browser is not supported due to restrictions set by Apple
 
  This script will only work if you select Leaflet as your map provider on geocaching.com.
  
