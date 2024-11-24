@@ -11,6 +11,18 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.1.4
+Sunday 24. Nov 2024 05:22
+
+- Previous update was uploaded with wrong version, and was not working on geocaching lists
+- Still not able to inject route on the new search map, recomend to use the browse map
+
+### Version 3.5.1.1
+Monday 18. Nov 2024 19:43
+
+-Fixed issues after latest updates on geocaching.com
+
+
 ### Version 3.5.1.03
 Monday 6. Feb 2023 20:33
 
