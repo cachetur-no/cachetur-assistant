@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.1.1
+// @version         3.5.1.4
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -16,7 +16,7 @@
 // @match           https://www.geocaching.com/geocache/*
 // @match           http://www.geocaching.com/geocache/*
 // @match           https://www.geocaching.com/seek/cache_details.aspx*
-// @match           https://www.geocaching.com/plan/lists/BM*
+// @match           https://www.geocaching.com/plan/lists/*
 // @match           http://project-gc.com/*
 // @match           https://project-gc.com/*
 // @match           http*://cachetur.no/bobilplasser
@@ -49,7 +49,7 @@
 this.$ = this.jQuery = jQuery.noConflict(true);
 let path = window.location.pathname;
 let _ctLastCount = 0;
-let _ctCacheturUser  = "";
+let _ctCacheturUser = "";
 let _ctLanguage = "";
 let _ctCodesAdded = [];
 let _ctPage = "unknown";
@@ -63,59 +63,6 @@ let _codenm = "";
 let settings = "";
 
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
-
-// Function to check for updates
-function checkForUpdates() {
-    const updateURL = GM_info.script.updateURL; // Get the update URL from metadata
-    const currentVersion = GM_info.script.version; // Get the current version from metadata
-
-    console.log(`Checking for updates... Current version: ${currentVersion}`);
-
-    GM_xmlhttpRequest({
-        method: "GET",
-        url: updateURL,
-        onload: function(response) {
-            if (response.status === 200) {
-                const metaData = response.responseText;
-                const latestVersion = getVersionFromMeta(metaData);
-
-                console.log(`Checked and verified version. Latest version: ${latestVersion}`);
-
-                if (isNewerVersion(latestVersion, currentVersion)) {
-                    if (confirm(`A new version (${latestVersion}) is available. Would you like to update?`)) {
-                        GM_openInTab(GM_info.script.downloadURL, { active: true });
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Function to extract version from metadata
-function getVersionFromMeta(metaData) {
-    const versionMatch = metaData.match(/@version\s+([\d.]+)/);
-    return versionMatch ? versionMatch[1] : null;
-}
-
-// Function to compare version numbers
-function isNewerVersion(latest, current) {
-    const latestParts = latest.split('.').map(Number);
-    const currentParts = current.split('.').map(Number);
-
-    for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
-        const latestPart = latestParts[i] || 0;
-        const currentPart = currentParts[i] || 0;
-
-        if (latestPart > currentPart) return true;
-        if (latestPart < currentPart) return false;
-    }
-    return false;
-}
-
-// Start checking for updates every hour
-const CHECK_INTERVAL = 60 * 60 * 1000; // Check every hour
-setInterval(checkForUpdates, CHECK_INTERVAL);
-checkForUpdates(); // Initial check
 
 let pathname = window.location.pathname;
 let domain = document.domain;
@@ -149,7 +96,45 @@ window.onload = function(){
 
 console.log("Running in " + _ctPage + " mode");
 
- if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+$(document).ready(function() {
+    loadTranslations();
+});
+
+function loadTranslations() {
+    i18next
+        .use(i18nextXHRBackend)
+        .use(i18nextBrowserLanguageDetector)
+        .init({
+            whitelist: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
+            preload: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
+            fallbackLng: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
+            lng: navigator.language || navigator.userLanguage,
+            ns: ['cachetur'],
+            defaultNS: 'cachetur',
+            backend: {
+                loadPath: 'https://cachetur.no/monkey/language/{{ns}}.{{lng}}.json',
+                crossDomain: true
+            }
+        }, (err, t) => {
+            if (err) {
+                if (err.indexOf("failed parsing" > -1)) {
+                    i18next.changeLanguage('en');
+                    return loadTranslations();
+                }
+                return console.log("Error occurred when loading language data", err);
+            }
+
+            // Log the resolved language correctly
+            const resolvedLanguage = i18next.language; // This will give you the actual language used
+            console.log("Translation fetched successfully " + resolvedLanguage);
+
+            ctStart();
+            ctStartmenu();
+        });
+}
+
+/// dirty trick for ctPage === "gc_map_new"
+    if (_ctPage === "gc_map_new") {
 
   console.log("Doing dirty trick to take over Geocaching.com's leaflet object");
     if (unsafeWindow.gcMap) {
@@ -165,109 +150,124 @@ console.log("Running in " + _ctPage + " mode");
         }}
 
     }
+    /// End of dirty trick
+    /// Check for new version of the assistant
+    // Function to check for updates
+function checkForUpdates() {
+    const updateURL = GM_info.script.updateURL; // Get the update URL from metadata
+    const currentVersion = GM_info.script.version; // Get the current version from metadata
 
-$(document).ready(function() {
-    loadTranslations();
-});
+    console.log(`Checking for updates... Current version: ${currentVersion}`);
 
-function loadTranslations() {
-    i18next
-        .use(i18nextXHRBackend)
-        .use(i18nextBrowserLanguageDetector)
-        .init({
-            whitelist: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
-            preload: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
-            fallbackLng: ['nb_NO', 'en', 'de_DE', 'sv_SE', 'en_US', 'da_DK', 'nl_NL', 'fr_FR', 'cs_CZ', 'fi_FI', 'es_ES'],
-            'lng': navigator.language || navigator.userLanguage,
-            ns: ['cachetur'],
-            defaultNS: 'cachetur',
-            backend: {
-            loadPath: 'https://cachetur.no/monkey/language/{{ns}}.{{lng}}.json',
-            crossDomain: true
-            }
-        }, (err, t) => {
-            if (err) {
-                if (err.indexOf("failed parsing" > -1)) {
-                    i18next.changeLanguage('en');
+    GM_xmlhttpRequest({
+        method: "GET",
+        url: updateURL,
+        onload: function(response) {
+            if (response.status === 200) {
+                const metaData = response.responseText;
+                const latestVersion = getVersionFromMeta(metaData);
 
-                    return loadTranslations();
+                console.log(`Checked and verified version. Latest version: ${latestVersion}`);
+
+                if (isNewerVersion(latestVersion, currentVersion)) {
+                    if (confirm(`A new version (${latestVersion}) of The Cachetur Assistant is now available. Would you like to update?`)) {
+                        GM_openInTab(GM_info.script.downloadURL, { active: true });
+                    }
                 }
-                return console.log("Error occurred when loading language data", err);
             }
-
-            console.log("Translation fetched successfully " +' '+ i18next.resolvedLanguage);
-
-            ctStart();
-        ctStartmenu()
-        });
+        }
+    });
 }
+
+// Function to extract version from metadata
+function getVersionFromMeta(metaData) {
+    const versionMatch = metaData.match(/@version\s+([\d.]+)/);
+    return versionMatch ? versionMatch[1] : null;
+}
+
+// Function to compare version numbers
+function isNewerVersion(latest, current) {
+    const latestParts = latest.split('.').map(Number);
+    const currentParts = current.split('.').map(Number);
+
+    for (let i = 0; i < Math.max(latestParts.length, currentParts.length); i++) {
+        const latestPart = latestParts[i] || 0;
+        const currentPart = currentParts[i] || 0;
+
+        if (latestPart > currentPart) return true;
+        if (latestPart < currentPart) return false;
+    }
+    return false;
+}
+
+// Start checking for updates every hour
+const CHECK_INTERVAL = 12* 60 * 60 * 1000; // Check every hour
+setInterval(checkForUpdates, CHECK_INTERVAL);
+checkForUpdates(); // Initial check
+    /// End of version check/update
 
    //Fill Menu
-    function ctStartmenu() {
+function ctStartmenu() {
+    // Check if GM_config is available
+    if (typeof GM_config !== "undefined") {
+        // Initialize the configuration menu
+        GM_config.init({
+            'id': 'MyConfig',
+            'title': i18next.t('edit.assistant') + ' ' + i18next.t('edit.settings') + '<br>',
+            'fields': {
+                'uc1': {
+                    'label': '<b>' + i18next.t('edit.toggle') + '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i>',
+                    'type': 'checkbox',
+                    'default': false
+                },
+                'uc2': {
+                    'label': '<b>' + i18next.t('edit.open') + '</b><br>' + i18next.t('edit.warning') + '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i>',
+                    'type': 'checkbox',
+                    'default': false
+                },
+                'uc3': {
+                    'label': '<b>' + i18next.t('edit.dt') + '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i>',
+                    'type': 'checkbox',
+                    'default': false
+                }
+            },
+        });
 
-    if("undefined" != typeof GM_config){
-	GM_config.init(
+        // Register the menu command to open the configuration
+        GM_registerMenuCommand(GM_info.script.name + i18next.t('edit.configure'), function() {
+            GM_config.open();
+        }, "C");
 
-	{
-		'id': 'MyConfig',
-		'title': i18next.t('edit.assistant') + ' ' + i18next.t('edit.settings') +  '<br> ',
-		'fields': {
-			'uc1': {
-				'label':'<b>' + i18next.t('edit.toggle') +  '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i> ',
-				'type': 'checkbox',
-				'default': false
-			},
+        // Retrieve user selections
+        var uc1 = GM_config.get("uc1");
+        var uc2 = GM_config.get("uc2");
+        var uc3 = GM_config.get("uc3");
 
-            'uc2': {
-				'label': '<b>' + i18next.t('edit.open') +  '</b><br>' + i18next.t('edit.warning') +  '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i> ',
-				'type': 'checkbox',
-				'default': false
-			},
+        // Execute functions based on user selections
+        if (uc1) {
+            updatecoord(); // Call the function related to uc1
+        }
 
-            'uc3': {
-				'label': '<b>' + i18next.t('edit.dt') +  '</b><br><i class="small">' + i18next.t('edit.default') + ' ' + i18next.t('edit.off') + '</i> ',
-				'type': 'checkbox',
-				'default': false
-			}
-		},
-	});
-	GM_registerMenuCommand(GM_info.script.name + i18next.t('edit.configure') , function(){
-				GM_config.open();
-	},"C");
+        if (uc2) {
+            open_new_page(); // Call the function related to uc2
+        }
 
-	var uc1 = GM_config.get("uc1");
-    var uc2 = GM_config.get("uc2");
-    var uc3 = GM_config.get("uc3");
-}
-else{
-	console.log("Could not load GM_config! external resource may be temporarily down?\nUsing default settings for now.", 1, "error");
-
-	GM_registerMenuCommand(GM_info.script.name + ' Settings', function(){
-		console.log("Could not load GM_config! external resource may be temporarily down?\nUsing default settings for now.");
-	});
-}
-
-
-if (uc1 === true) {
-    updatecoord();
+        if (uc3) {
+            // Set up a condition to call the function related to uc3
+            var existCondition = setInterval(function() {
+                if ($('#cachetur-tur-valg').length) {
+                    clearInterval(existCondition);
+                    tvinfo(); // Call the function related to uc3
+                }
+            }, 100);
+        }
     } else {
-
+        // Handle the case where GM_config is not available
+        console.log("Could not load GM_config! External resource may be temporarily down. Using default settings for now.", 1, "error");
+        GM_registerMenuCommand(GM_info.script.name + ' Settings', function() {
+            console.log("Could not load GM_config! External resource may be temporarily down. Using default settings for now.");
+        });
     }
-if (uc2 === true) {
-    open_new_page();
-    } else {
-
-    }
-    if (uc3 === true) {
-        var existCondition = setInterval(function() {
- if ($('#cachetur-tur-valg').length) {
-    clearInterval(existCondition);
-     tvinfo();
- }
-}, 100);
-    } else {
-    }
-
 }
 
   // open new page
@@ -881,7 +881,7 @@ function ctGetPublicLists_gc_map_new(cache) {
                 return;
             }
 
-            console.log(("Injecting list of lists to geocache ") + cache);
+            console.log("Injecting list of lists to geocache ");
             let alternate = false;
             let listHtml = '<div class="cachetur-controls-container"><h3 class="WidgetHeader"><img src="https://cachetur.no/api/img/cachetur-15.png" /> Cachetur.no</h3><div class="WidgetBody"><h5>' + i18next.t('lists.in') + '</h5>';
             data.forEach(function(list) {
@@ -905,7 +905,7 @@ function ctGetPublicLists_gc_map_live(cache) {
                 return;
             }
 
-            console.log(("Injecting list of lists to geocache ") + cache);
+            console.log("Injecting list of lists to geocache ");
             let alternate = false;
             let listHtml = '<div class="cachetur-controls-container"><h3 class="WidgetHeader"><img src="https://cachetur.no/api/img/cachetur-15.png" /> Cachetur.no</h3><div class="WidgetBody"><h5>' + i18next.t('lists.in') + '</h5>';
             data.forEach(function(list) {
@@ -1034,7 +1034,7 @@ function ctWatchBrowseMap() {
     // Start observing the target node for configured mutations
     if (targetNode) {
         observer.observe(targetNode, config);
-        console.log("MutationObserver is set up to watch for changes in #gmCacheInfo.");
+        console.log("MutationObserver is set up to watch for changes on browse map.");
     } else {
         console.error("Target node #gmCacheInfo not found.");
     }
@@ -1070,7 +1070,7 @@ function ctWatchBrowseMap() {
 }
 
 function ctWatchNewMap() {
-    console.log("start mutationobserver");
+    console.log("start mutationobserver on new search map");
     let targetNode = document.body;
     let config = {
         attributes: true,
@@ -1432,60 +1432,83 @@ function ctPGCCheckVgps() {
 }
 
 function ctAddSendListButton() {
-    waitForKeyElements(".multi-select-action-bar", function() {
+    waitForKeyElements(".actions", function() {
         console.log("Injecting send to cachetur button");
-        $(".multi-select-action-bar-count-section").after('<button type="button" class="cachetur-send-bmlist gc-button multi-select-action-bar-button gc-button-has-type gc-button-primary" style="margin-left: 5px;"><img src="https://cachetur.no/api/img/cachetur-15.png" title="' + i18next.t('send') + '" style="cursor: pointer;" /> ' + i18next.t('vgps.sendmarked') + '</button> ');
+        $(".actions").append('<button type="button" class="cachetur-send-bmlist gc-button multi-select-action-bar-button gc-button-has-type gc-button-primary" style="margin-left: 5px;"><img src="https://cachetur.no/api/img/cachetur-15.png" title="' + i18next.t('send') + '" style="cursor: pointer;" /> ' + i18next.t('vgps.sendmarked') + '</button>');
 
         $(".cachetur-send-bmlist").click(function(evt) {
             evt.stopImmediatePropagation();
             evt.preventDefault();
-
             ctListSendSelected();
         });
     });
 }
 
 function ctListSendSelected() {
-    let selected = $('.geocache-table tbody tr input[type="checkbox"]:checked').closest("tr").find(".geocache-code");
+    if (_ctPage === "gc_bmlist") {
+        console.log("Sending selected geocaches from gc_bmlist");
+        let selected = $('.list-details-table tbody tr input[type="checkbox"]:checked');
 
-    if (selected.length > 0) {
-        let tur = $("#cachetur-tur-valg").val();
-        let codes = [];
+        if (selected.length > 0) {
+            let codes = [];
+            let names = []; // Array to hold the names of the geocaches
 
-        selected.each(function(index) {
-            codes.push($(this).text().split('|')[1].trim());
-        });
+            selected.each(function() {
+                let code = $(this).closest("tr").find(".geocache-meta span").last().text().trim();
+                codes.push(code);
 
-        ctApiCall("planlagt_add_codes", {
-            tur: tur,
-            code: codes
-        }, function(data) {
-            if (data === "Ok") {
-                ctGetAddedCodes(tur);
-                ctGetTripRoute(tur);
-                alert(i18next.t('vgps.sent'));
-            } else {
-                alert(i18next.t('vgps.error'));
-            }
-        });
+                // Extract the geocache name from the anchor tag
+                let name = $(this).closest("tr").find("a.text-grey-600").text().trim();
+                names.push(name); // Add the name to the names array
+            });
 
-        GM_setValue("cachetur_last_action", Date.now());
+            let tur = $("#cachetur-tur-valg").val();
+
+            ctApiCall("planlagt_add_codes", {
+                tur: tur,
+                code: codes
+            }, function(data) {
+                if (data === "Ok") {
+                    ctGetAddedCodes(tur);
+                    ctGetTripRoute(tur);
+
+                    // Create a string of names to include in the alert
+                    let namesString = names.join(", "); // Join names with a comma
+                    alert(i18next.t('vgps.sent') + ": " + namesString); // Include names in the alert
+
+                    // Update the UI to reflect the sent status
+                    selected.each(function() {
+                        let code = $(this).closest("tr").find(".geocache-meta span").last().text().trim();
+                        let correspondingRow = $(".list-details-table tbody tr").filter(function() {
+                            return $(this).find(".geocache-meta span").last().text().trim() === code;
+                        });
+
+                        if (correspondingRow.length) {
+                            correspondingRow.find(".sent-status").remove(); // Remove any existing status
+                            correspondingRow.find("td.geocache-details").append('<span class="sent-status" style="color: green;"> - Sent</span>');
+                        }
+                    });
+                } else {
+                    alert(i18next.t('vgps.error'));
+                }
+            });
+
+            GM_setValue("cachetur_last_action", Date.now());
+        }
     }
 }
 
 function ctCheckList() {
     if (_ctPage !== "gc_bmlist") return;
 
-    waitForKeyElements(".geocache-table", function() {
-        $(".cachetur-bmlist-added").remove();
+    waitForKeyElements(".list-details-table", function() {
+        console.log("Checking list for added caches");
+        $(".cachetur-bmlist-added").remove(); // Remove existing indicators
 
-        $("table.geocache-table").find("tr").each(function() {
-            let codeInfo = $(this).find(".geocache-code").text().split('|');
-            if (codeInfo.length > 1) {
-                let code = codeInfo[1].trim();
-                if (ctCodeAlreadyAdded(code)) {
-                    $(this).find(".geocache-code").prepend('<img class="cachetur-bmlist-added" src="https://cachetur.no/api/img/cachetur-15-success.png" title="' + i18next.t('sent') + '"> ');
-                }
+        $("table.list-details-table").find("tr").each(function() {
+            let codeInfo = $(this).find(".geocache-meta span").last().text().trim();
+            if (ctCodeAlreadyAdded(codeInfo)) {
+                $(this).find(".geocache-meta").prepend('<img class="cachetur-bmlist-added" src="https://cachetur.no/api/img/cachetur-15-success.png" title="' + i18next.t('sent') + '"> ');
             }
         });
     });
@@ -2084,4 +2107,3 @@ GM_xmlhttpRequest({
 
 
     }
-
