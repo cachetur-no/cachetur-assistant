@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.1.1
+// @version         3.5.1.4
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -16,7 +16,7 @@
 // @match           https://www.geocaching.com/geocache/*
 // @match           http://www.geocaching.com/geocache/*
 // @match           https://www.geocaching.com/seek/cache_details.aspx*
-// @match           https://www.geocaching.com/plan/lists/BM*
+// @match           https://www.geocaching.com/plan/lists/*
 // @match           http://project-gc.com/*
 // @match           https://project-gc.com/*
 // @match           http*://cachetur.no/bobilplasser
