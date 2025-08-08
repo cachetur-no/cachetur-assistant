@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.1.4
+// @version         3.5.1.5
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -45,3 +45,4 @@
 // @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
 /* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto, gm_config */
+
