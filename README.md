@@ -11,6 +11,11 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.1.5
+Friday 08. Aug 2025 16:28
+
+- Quick fix to show assistant on PGC after changes done on PGC header bar
+
 ### Version 3.5.1.4
 Sunday 24. Nov 2024 05:22
 
