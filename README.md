@@ -11,6 +11,14 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.2.0
+Mondat 11. Aug 2025 04:30
+
+- Fixed the Cachetur header on the new PGC header
+- Made the assistant display your route on the live map on geocaching.com
+- Made the assitant work on the page for geotours (including route)
+- CSS tweaks and upgrades
+
 ### Version 3.5.1.5
 Friday 08. Aug 2025 16:28
 
