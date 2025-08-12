@@ -16,11 +16,6 @@ Tuesday 12. Aug 2025 19:38
 
 - Fixed Bug with mutationobserver for PGC
 
-### Version 3.5.1.5
-Friday 08. Aug 2025 16:28
-
-- Quick fix to show assistant on PGC after changes done on PGC header bar
-
 ### Version 3.5.2.0
 Monday 11. Aug 2025 04:30
 
