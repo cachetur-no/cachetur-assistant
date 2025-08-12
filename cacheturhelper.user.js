@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.2.0
+// @version         3.5.2.1
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -94,6 +94,7 @@ let _ctNewMapActiveCache = "";
 let _ctBrowseMapActiveCache = "";
 let _codenm = "";
 let settings = "";
+let optionsHtml = "";
 
 console.log("Starting Cacheturassistenten V. " + GM_info.script.version);
 
@@ -673,15 +674,6 @@ function ctInitInactive() {
 
 }
 
-function ctPGCMapInit() {
-    console.log("Continuing initialization - PGC Live Map mode");
-  //  $("leaflet-popup-content").bind("DOMSubtreeModified", ctPgcMapBindToChanges);
-    let storedTrip = GM_getValue("cachetur_selected_trip", 0);
-    ctPgcMapBindToChanges();
-    ctGetAddedCodes(storedTrip);
-    ctGetTripRoute(storedTrip);
-}
-
 // 1) Give the header a page-specific class
 function ctHeaderClass() {
   if (_ctPage === 'pgc_map' || _ctPage === 'pgc_vgps') return 'ct-pgc';
@@ -700,7 +692,7 @@ function ctHeaderClass() {
   '    <img src="https://cachetur.net/img/logo_top.png" title="' + i18next.t('menu.loggedinas') + ' ' + _ctCacheturUser + '" /> ' +
        i18next.t('menu.addto') +
   '  </span>' +
-  '  <select id="cachetur-tur-valg">' + options + '</select>' +
+  '  <select id="cachetur-tur-valg">' + optionsHtml + '</select>' +
   '  <button id="cachetur-tur-open" class="cachetur-menu-button" type="button" title="' + i18next.t('menu.opentrip') + '"><img src="https://cachetur.no/api/img/arrow.png" style="height:16px;"/></button>' +
   '  <button id="cachetur-tur-refresh" type="button" class="cachetur-menu-button" title="' + i18next.t('menu.refresh') + '"><img src="https://cachetur.no/api/img/refresh.png" style="height:16px;"/></button>' +
   '  <button id="cachetur-tur-add-ct-caches" type="button" class="cachetur-menu-button" title="' + i18next.t('menu.showonmap') + '"><img src="https://cachetur.no/api/img/map.png" style="height:16px;"/></button>' +
@@ -995,7 +987,6 @@ function ctCreateTripList() {
     const hasTrips = Array.isArray(available) && available.length > 0;
 
     // build the <option> list robustly
-    let optionsHtml = "";
     if (hasTrips) {
       optionsHtml = available.map(function (item) {
         return '<option value="' + item.id + '">' + item.turnavn + '</option>';
@@ -1003,6 +994,12 @@ function ctCreateTripList() {
     } else {
       // fallback when no trips are found
       optionsHtml = '<option value="" disabled selected>' + i18next.t('menu.notrips') + '</option>';
+    }
+
+    // If the select already exists in the DOM, update it
+    const $sel = $("#cachetur-tur-valg");
+    if ($sel.length) {
+      $sel.html(optionsHtml);
     }
 
     // HTML for the header (markup only)
@@ -1438,16 +1435,16 @@ function ctInitAddLinks() {
             "</large>"
           );
         });
+
         tvinfostart();
         break;
       }
       if (!document.querySelector("primary log-geocache")) ctWatchNewMap();
       break;
 
-    case "pgc_map":
-      if (!document.querySelector("addtovgps")) ctPgcMapBindToChanges();
-      // ctPGCMapInit(); // fortsatt avskrudd, som før
-      break;
+   case "pgc_map":
+        ctInitPGCMap();
+    break;
 
     case "pgc_vgps":
       ctAddSendPgcVgpsButton();
@@ -1591,172 +1588,317 @@ function ctWatchNewMap() {
 
 }
 
-function ctInitPGCLiveMapListener() {
-    if (_ctPage !== "pgc_map" || window.location.pathname.indexOf("/Tools/LiveMap") === -1) return;
+// --- PGC init: inject on data-cacheid changes (robust for re-renders) ---
+function ctInitPGCMap() {
+    if (_ctPage !== "pgc_map" || window.location.pathname.indexOf("/Tools/") === -1) return;
+    if (window.__ctPGCInitDone) return;
+    const map = ctGetUnsafeLeafletObject();
+    if (!map) return;
 
-    console.log("Initializing PGC Live Map layeradd-listener");
+    console.log("[Cachetur] PGC init (watching data-cacheid)");
 
-    let map = ctGetUnsafeLeafletObject();
-    if (map === null) return;
+    // Helper: inject menu into the popup that owns a given .addtovgps element
+    function injectForAddToVgps(el) {
+        try {
+            // Find the real popup content
+            const content = el.closest(".leaflet-popup-content");
+            if (!content) return;
 
-    map.on("layeradd", function(layer) {
-        setTimeout(ctPGCCheckAndMarkLayer.bind(null, layer), 50);
-    });
-}
+            // Find the coord.info link (source of the GC code text)
+            const link = content.querySelector("a[href*='//coord.info/']");
+            if (!link) return;
 
-function ctPgcMapBindToChanges() {
-    console.log('ctPgcMapBindToChanges initialized');
+            // Parent is where we inject (your code expects a jQuery object)
+            const $parent = $(link).parent();
 
-    // Select the target node (the body or a specific container)
-    let targetNode = document.body;
+            // Clean any stale injection if popup node has been reused
+            $parent.find(".cachetur-controls-container").remove();
 
-    // Configuration for the observer
-    let config = {
-        childList: true,
-        subtree: true
-    };
-
-    // Callback function to execute when mutations are observed
-    let callback = function(mutationsList, observer) {
-        mutationsList.forEach(mutation => {
-            if (mutation.type === 'childList') {
-                // Check for Leaflet popups
-                let popups = $(".leaflet-popup-content");
-                if (popups.length) {
-                    // Handle the last popup
-                    let cacheLink = popups.last().find("a[href*='//coord.info/']")[0];
-                    if (cacheLink) {
-                        // Extract the cache code from the URL
-                        let fullUrl = cacheLink.href; // e.g., "//coord.info/GC670CJ"
-                        let gcCode = fullUrl.split('/').pop(); // Get the last part, which is "GC670CJ"
-
-                        // Pass the parent element of cacheLink as a jQuery object
-                        ctAddToVGPSLink($(cacheLink).parent());
-                    }
-                }
+            // Only inject if our button is missing
+            if (!$parent.find(".cachetur-add-code").length) {
+                console.log("[Cachetur] Injecting (data-cacheid watcher):", link.textContent.trim());
+                ctAddToVGPSLink($parent);
             }
-        });
-    };
+        } catch (err) {
+            console.error("[Cachetur] Injection error:", err);
+        }
+    }
 
-    // Create an instance of MutationObserver with the callback
-    let observer = new MutationObserver(callback);
+    // Debounce map-wide: if multiple mutations fire rapidly, batch to next tick
+    let pending = new Set();
+    let flushTimer = null;
+    function schedule(el) {
+        pending.add(el);
+        if (flushTimer) return;
+        flushTimer = setTimeout(() => {
+            const els = Array.from(pending);
+            pending.clear();
+            flushTimer = null;
+            els.forEach(injectForAddToVgps);
+        }, 60); // small debounce; adjust if needed
+    }
 
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-    console.log("MutationObserver is set up to watch for changes in Leaflet popups.");
+    // Observe:
+    //  - attribute changes to data-cacheid on .addtovgps
+    //  - added popups that include an .addtovgps (first open)
+    const mo = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.type === "attributes" &&
+                m.attributeName === "data-cacheid" &&
+                m.target.classList?.contains("addtovgps")) {
+                // PGC just changed which cache this popup represents
+                schedule(m.target);
+            }
+            if (m.type === "childList") {
+                // Check newly added subtrees for .addtovgps (new popup content)
+                m.addedNodes && m.addedNodes.forEach((n) => {
+                    if (n.nodeType !== 1) return;
+                    if (n.matches?.(".leaflet-popup-content")) {
+                        const btn = n.querySelector(".addtovgps");
+                        if (btn) schedule(btn);
+                    } else {
+                        const btns = n.querySelectorAll?.(".leaflet-popup-content .addtovgps");
+                        btns && btns.forEach(schedule);
+                    }
+                });
+            }
+        }
+    });
+
+    mo.observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ["data-cacheid"]
+    });
+
+    // Also handle the moment a popup opens (helpful first-run trigger)
+    map.on("popupopen", (e) => {
+        const btn = $(e.popup._container).find(".leaflet-popup-content .addtovgps").get(0);
+        if (btn) schedule(btn);
+    });
+
+    // Keep your layer marking (if you use it)
+    map.on("layeradd", (layer) => {
+        setTimeout(() => {
+            try { ctPGCCheckAndMarkLayer(layer); } catch (err) {
+                console.error("[Cachetur] layeradd error:", err);
+            }
+        }, 50);
+    });
+
+    window.__ctPGCInitDone = true;
+    console.log("[Cachetur] PGC observers ready (data-cacheid + popupopen)");
 }
 
 function ctAddToVGPSLink(vgps) {
-    if (!vgps.hasClass("cachetur-add")) {
-        let cacheLink = vgps.find("a")[0];
-        if (!cacheLink) return;
-        let gcCode = cacheLink.href.split(".info/")[1];
-        vgps.append('<br><img src="https://cachetur.no/api/img/cachetur-15.png" title="' + i18next.t('send') + '" class="cachetur-add-code" style="cursor: pointer; left:20px;" data-code="' + gcCode + '" /><br> ');
-        if (window.location.pathname.indexOf("/Tools/LiveMap") === -1) {
-            vgps.find("a")[1].remove();
-        }
-        vgps.addClass("cachetur-add");
+  // Guard: ensure we have a jQuery object
+  if (!vgps || !vgps.length) return;
 
-        ctUpdateAddImage();
+  // Inject only if the Cachetur button is not already present
+  if (vgps.find(".cachetur-add-code").length === 0) {
+    // Prefer the coord.info link when extracting the GC code
+    const cacheLink = vgps.find("a[href*='//coord.info/']")[0] || vgps.find("a")[0];
+    if (!cacheLink) return;
+
+    // Extract GC code robustly
+    let gcCode = "";
+    try {
+      gcCode = (cacheLink.href.split(".info/")[1] || "").toUpperCase();
+      if (!gcCode) {
+        const m = (cacheLink.text || "").match(/GC[A-Z0-9]+/i);
+        if (m) gcCode = m[0].toUpperCase();
+      }
+    } catch (e) {
+      console.warn("[Cachetur] Failed to extract GC code:", e);
+      return;
+    }
+    if (!gcCode) return;
+
+    // Clean any stale controls if popup DOM was reused
+    vgps.find(".cachetur-controls-container").remove();
+
+    // Inject Cachetur button (same look & feel as before)
+    vgps.append(
+      '<br><img src="https://cachetur.no/api/img/cachetur-15.png" ' +
+      'title="' + i18next.t("send") + '" class="cachetur-add-code" ' +
+      'style="cursor: pointer; left:20px;" data-code="' + gcCode + '" /><br> '
+    );
+
+    // Optional: remove the extra link on non-LiveMap pages (keep original behavior)
+    if (window.location.pathname.indexOf("/Tools/LiveMap") === -1) {
+      vgps.find("a")[1]?.remove();
     }
 
-    $(".cachetur-add-code").click(function(evt) {
+    console.log("[Cachetur] Injected Cachetur button for", gcCode);
+    ctUpdateAddImage();
+  }
+
+  // Bind delegated click handler once (prevents duplicate bindings across popups)
+  if (!window.__ctAddCodeClickBound) {
+    window.__ctAddCodeClickBound = true;
+
+    $(document)
+      .off("click.ct", ".cachetur-add-code")
+      .on("click.ct", ".cachetur-add-code", function (evt) {
         evt.stopImmediatePropagation();
         evt.preventDefault();
 
-        let tur = $("#cachetur-tur-valg").val();
-        let img = $(this);
-        let code = img.data("code");
-        ctApiCall("planlagt_add_codes", {
-            tur: tur,
-            code: code
-        }, function(data) {
-            if (data === "Ok") {
-                _ctCodesAdded.push(code);
-                ctUpdateAddImage(true);
-                $('#cachetur-tur-antall').html(_ctCodesAdded.length);
-            } else {
-                img.attr("src", "https://cachetur.no/api/img/cachetur-15-error.png");
-            }
+        const tur  = $("#cachetur-tur-valg").val();
+        const $btn = $(this);
+        const code = String($btn.data("code") || "").toUpperCase();
+
+        ctApiCall("planlagt_add_codes", { tur: tur, code: code }, function (data) {
+          if (data === "Ok") {
+            _ctCodesAdded.push(code);
+            ctUpdateAddImage(true);
+            $("#cachetur-tur-antall").html(_ctCodesAdded.length);
+
+            // Refresh the Cachetur header/select/count immediately (no page reload)
+            try { ctCreateTripList(); } catch (e) { console.warn("[Cachetur] ctCreateTripList refresh failed:", e); }
+          } else {
+            // Show error state on the button icon
+            $btn.attr("src", "https://cachetur.no/api/img/cachetur-15-error.png");
+          }
         });
 
         GM_setValue("cachetur_last_action", Date.now());
-    });
+      });
+  }
 }
 
 function ctAddToCoordInfoLink(code) {
-    if (!code.hasClass("cachetur-add")) {
-        let gcCode = code.html();
-        let img = '<img src="https://cachetur.no/api/img/cachetur-15.png" title="' + i18next.t('send') + '" class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '" /> ';
+    // Ensure we have a jQuery object
+    if (!code || !code.length) return;
 
-        if (_ctPage === "gc_geocache") {
-            console.log("injecting cachetur menus to geocaches");
-            code = $("#ctl00_ContentBody_CoordInfoLinkControl1_uxCoordInfoCode");
-            ctGetPublicLists(gcCode);
-            $(".CacheDetailNavigation").append('<ul id="cachetur-controls-container"><li><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '">' + i18next.t('send') + '</a></li></ul>');
-        } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
-            let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> ' + i18next.t('send') + '</a>';
-            code.parent().append('<div class="links Clear cachetur-controls-container">' + img + '</div>');
-             tvinfostart();
-         } else if (_ctPage === "pgc_map") {
-            let img = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> ' + i18next.t('send') + '</a>';
-            code.parent().append('<div class="leaflet-popup-content">' + img + '</div>');
-         } else if (_ctPage === "gc_map_new") {
-            console.log("injecting cachetur menus to geocache " + gcCode);
-            code = (".cache-metadata-code");
-            $(".cache-preview-action-menu").prepend('<br><ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
-            ctGetPublicLists_gc_map_new(gcCode);
-            tvinfostart();
-        } else if (_ctPage === "gc_map_live") {
-            console.log("injecting cachetur menus to geocache " + gcCode);
-            code = (".cache-metadata-code");
-            $(".cache-preview-action-menu").prepend('<br><ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" /><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' + i18next.t('send') + '</a></li></ul>');
-            ctGetPublicLists_gc_map_live(gcCode);
-                    tvinfostart();
-
-        } else {
-            code.prepend(img);
+    // Extract a GC code robustly (prefer coord.info href, else parse text)
+    function extractGcCode($el) {
+        try {
+            if ($el.is("a[href*='//coord.info/']")) {
+                const href = String($el.attr("href") || "");
+                return href.split("/").pop().trim().toUpperCase();
+            }
+            const txt = ($el.text() || $el.html() || "").trim();
+            const m = txt.match(/GC[A-Z0-9]+/i);
+            return (m ? m[0] : txt).toUpperCase();
+        } catch (_) {
+            return "";
         }
-        if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-            $(".cache-metadata-code").addClass("cachetur-add");
-        } else {
-            code.addClass("cachetur-add");
-        }
-
-        ctUpdateAddImage();
     }
 
-    $(".cachetur-add-code").click(function(evt) {
-        evt.stopImmediatePropagation();
-        evt.preventDefault();
+    // Append our button, but only if it's not already present in the target container
+    function injectIfMissing($container, gcCode) {
+        if (!$container || !$container.length || !gcCode) return;
 
-        let tur = $("#cachetur-tur-valg").val();
-        let img = $(this);
-        let code = img.data("code");
-        ctApiCall("planlagt_add_codes", {
-            tur: tur,
-            code: code
+        // Clean any stale containers if the popup DOM was reused
+        $container.find(".cachetur-controls-container").remove();
 
-        }, function(data) {
-            if (data === "Ok") {
-                _ctCodesAdded.push(code);
-                ctUpdateAddImage(true);
-                $('#cachetur-tur-antall').html(_ctCodesAdded.length);
-            } else {
-                if (_ctPage === "gc_geocache") {
-                    img.addClass("cachetur-add-code-error");
-                } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                    img.addClass("cachetur-add-code-error");
-                } else if (_ctPage === "gc_map") {
-                    img.html('<img src="https://cachetur.no/api/img/cachetur-15-error.png" /> ' + i18next.t('send'));
+        // If the button is already there, do nothing
+        if ($container.find(".cachetur-add-code").length) return;
+
+        const html = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' +
+                     gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> ' +
+                     i18next.t("send") + "</a>";
+
+        // Use a neutral wrapper (never create a new .leaflet-popup-content)
+        $container.append('<div class="cachetur-controls-container">' + html + "</div>");
+    }
+
+    const gcCode = extractGcCode(code);
+    let $target = null;
+
+    if (_ctPage === "gc_geocache") {
+        console.log("[Cachetur] Injecting menu on GC cache details");
+        // Force the canonical code element, keep existing list logic
+        const $codeEl = $("#ctl00_ContentBody_CoordInfoLinkControl1_uxCoordInfoCode");
+        ctGetPublicLists(gcCode);
+        $(".CacheDetailNavigation")
+            .append('<ul id="cachetur-controls-container"><li><a href class="cachetur-add-code" style="cursor: pointer;" data-code="' +
+                    gcCode + '">' + i18next.t("send") + "</a></li></ul>");
+
+    } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
+        // Classic/Geotours map: inject below the code’s parent (as before), but guarded
+        const html = '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' +
+                     gcCode + '"><img src="https://cachetur.no/api/img/cachetur-15.png" /> ' +
+                     i18next.t("send") + "</a>";
+        const $parent = code.parent();
+        if ($parent.length && !$parent.find(".cachetur-add-code").length) {
+            $parent.append('<div class="links Clear cachetur-controls-container">' + html + "</div>");
+        }
+
+        // (GC classic click handling is also bound in ctInstallGcPopupWatcher)
+
+    } else if (_ctPage === "pgc_map") {
+        // Project-GC Live Map: inject into the real popup content (parent of coord.info link)
+        // IMPORTANT: do NOT create another .leaflet-popup-content
+        const $parent = code.parent();
+        injectIfMissing($parent, gcCode);
+
+    } else if (_ctPage === "gc_map_new") {
+        console.log("[Cachetur] Injecting menu on GC new map popup " + gcCode);
+        // React map preview panel
+        $(".cache-preview-action-menu").prepend(
+            '<br><ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" />' +
+            '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' +
+            i18next.t("send") + "</a></li></ul>"
+        );
+        ctGetPublicLists_gc_map_new(gcCode);
+        tvinfostart();
+
+    } else if (_ctPage === "gc_map_live") {
+        console.log("[Cachetur] Injecting menu on GC live map popup " + gcCode);
+        $(".cache-preview-action-menu").prepend(
+            '<br><ul id="cachetur-controls-container"><li><img src="https://cachetur.no/api/img/cachetur-15.png" />' +
+            '<a href class="cachetur-add-code" style="cursor: pointer;" data-code="' + gcCode + '"> ' +
+            i18next.t("send") + "</a></li></ul>"
+        );
+        ctGetPublicLists_gc_map_live(gcCode);
+        tvinfostart();
+
+    } else {
+        // Generic fallback: prepend the small icon next to the code
+        const img = '<img src="https://cachetur.no/api/img/cachetur-15.png" title="' +
+                    i18next.t("send") + '" class="cachetur-add-code" style="cursor: pointer;" data-code="' +
+                    gcCode + '" /> ';
+        code.prepend(img);
+    }
+
+    // DO NOT set a sticky class like "cachetur-add" on containers; that breaks reinjection on reused nodes.
+
+    // Refresh the add/send icon state
+    ctUpdateAddImage();
+
+    // Bind a single delegated click handler for our buttons (idempotent)
+    if (!window.__ctAddCodeClickBound) {
+        window.__ctAddCodeClickBound = true;
+
+        $(document).off("click.cacheturAddCode").on("click.cacheturAddCode", ".cachetur-add-code", function (evt) {
+            evt.stopImmediatePropagation();
+            evt.preventDefault();
+
+            const tur  = $("#cachetur-tur-valg").val();
+            const $btn = $(this);
+            const code = String($btn.data("code") || "").toUpperCase();
+
+            ctApiCall("planlagt_add_codes", { tur: tur, code: code }, function (data) {
+                if (data === "Ok") {
+                    _ctCodesAdded.push(code);
+                    ctUpdateAddImage(true);
+                    $("#cachetur-tur-antall").html(_ctCodesAdded.length);
                 } else {
-                    img.attr("src", "https://cachetur.no/api/img/cachetur-15-error.png");
+                    if (_ctPage === "gc_geocache" || _ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+                        $btn.addClass("cachetur-add-code-error");
+                    } else if (_ctPage === "gc_map") {
+                        $btn.html('<img src="https://cachetur.no/api/img/cachetur-15-error.png" /> ' + i18next.t("send"));
+                    } else {
+                        $btn.attr("src", "https://cachetur.no/api/img/cachetur-15-error.png");
+                    }
                 }
-            }
-        });
+            });
 
-        GM_setValue("cachetur_last_action", Date.now());
-    });
+            GM_setValue("cachetur_last_action", Date.now());
+        });
+    }
 }
 
     //fake update posted coordinates
