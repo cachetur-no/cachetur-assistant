@@ -11,6 +11,12 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.2.2
+Wednesday 13. Aug 2025 23:28
+
+- Fixed Bug that occured ffter adding support for the Geotour map, a similarity with the popup on that map, and the browse map caused the assistant to refresh the page when trying to add a cache from the browse map
+- Tweaked CSS on trip selector in narrow geocaching.com header's, where the trip list looked empty, due to being to narrow
+
 ### Version 3.5.2.1
 Tuesday 12. Aug 2025 19:38
 
