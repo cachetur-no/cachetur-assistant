@@ -11,6 +11,14 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.2.3
+Saturday 16. Aug 2025 06:13
+
+-Added support for maps generated from the statistics on PGC
+-Added handeling of assistant if PGC userscript is beiing used
+-Added handeling of assistant if GCLH2 is being used
+-Fixed bug where if a cache on PGC map was added to VPGS it couldn’t be added to cachetur
+
 ### Version 3.5.2.2
 Wednesday 13. Aug 2025 23:28
 
