@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.2.2
+// @version         3.5.2.3
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -23,6 +23,7 @@
 // @match           http*://cachetur.no/bobilplasser
 // @connect         cachetur.no
 // @connect         cachetur.net
+// @connect         raw.githubusercontent.com
 // @connect         github.com
 // @connect         self
 // @grant           GM_xmlhttpRequest
@@ -47,6 +48,7 @@
 // ==/UserScript==
 
 // === DRY helpers injected by refactor (phase 1) ===
+
 function ctInsert(data, $target, mode) {
     try {
         if ($target && typeof $target[mode] === 'function') {
@@ -113,7 +115,7 @@ function ctDetectPage() {
   if (host === "geocaching.com" || host === "www.geocaching.com") {
     if (path.includes("/seek/") || path.includes("/geocache/")) return "gc_geocache";
     if (path.includes("/plan/lists") || path.includes("/plan/")) return "gc_bmlist";
-    if (path === "/map" || path === "/map/") return "gc_map";
+    if (path === "/map" || path.includes("/map/")) return "gc_map";
     if (path.includes("/live/play/map") || path.includes("/play/map")) return "gc_map_new";
     if (path.includes("/play/geotours")) return "gc_gctour";
   }
@@ -127,7 +129,9 @@ function ctDetectPage() {
   // Project-GC (with/without www) – case-insensitive
   if (host === "project-gc.com" || host === "www.project-gc.com") {
     if (path.includes("/user/virtualgps") && !search.includes("map=")) return "pgc_vgps";
-    if (path.includes("/livemap/") || path.includes("/tools/"))        return "pgc_map";
+    if (path.includes("/livemap/") || path.includes("/tools/"))       return "pgc_map";
+    if (path.includes("/maps/")) return "pgc_map2";
+
   }
 
   return "unknown";
@@ -340,142 +344,186 @@ if (typeof _ctPage !== 'undefined' && (_ctPage === 'gc_map_new' || _ctPage === '
 })();
 /// --- end ---
 
-/// Check for new version of the assistant + show "What's new" from README
-(function installUpdateChecker() {
-  // Where to read the changelog (raw README)
-  const README_URL = "https://github.com/cachetur-no/cachetur-assistant/raw/refs/heads/master/README.md";
-  const CHECK_INTERVAL = 60 * 60 * 1000; // every hour
+/// Check for new version of the assistant (with README changelog toast + snooze)
+(function () {
+  // Use the RAW host to avoid redirect blocks (remember @connect raw.githubusercontent.com)
+  const README_RAW_URL = "https://raw.githubusercontent.com/cachetur-no/cachetur-assistant/refs/heads/master/README.md";
+  const CHECK_INTERVAL = 60 * 60 * 1000; // 1 hour
+  const LAST_NOTIFIED_KEY = "ct_last_notified_ver"; // {version:string, at:number}
+  const REMIND_AFTER_MS = 24 * 60 * 60 * 1000; // remind again after 24h
 
-  // ---- version helpers -----------------------------------------------------
-  function parseVersionTuple(v) {
-    return String(v).split(".").map(n => parseInt(n, 10) || 0);
-  }
-  function cmpVersion(a, b) {
-    const A = parseVersionTuple(a), B = parseVersionTuple(b);
-    const len = Math.max(A.length, B.length);
-    for (let i = 0; i < len; i++) {
-      const av = A[i] || 0, bv = B[i] || 0;
-      if (av > bv) return 1;
-      if (av < bv) return -1;
+  function escHtml(s){ return String(s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+  function isNewerVersion(latest, current){
+    if(!latest || !current) return false;
+    const a = latest.split(".").map(Number), b = current.split(".").map(Number);
+    for (let i=0, len=Math.max(a.length,b.length); i<len; i++){
+      const x=a[i]||0, y=b[i]||0; if(x>y) return true; if(x<y) return false;
     }
-    return 0;
-  }
-  function isNewerVersion(latest, current) {
-    return cmpVersion(latest, current) > 0;
+    return false;
   }
 
-  // ---- README parsing -------------------------------------------------------
-  /**
-   * Extract release notes blocks newer than currentVersion.
-   * README format example:
-   *   Version 3.5.2.1
-   *   Tuesday 12. Aug 2025 19:38
-   *   Fixed ...
-   *   Version 3.5.2.0
-   *   ...
-   */
-  function parseReleaseNotes(readmeText, currentVersion) {
-    const rx = /(?:^|\n)Version\s+(\d+(?:\.\d+)+)[^\n]*\n([\s\S]*?)(?=\nVersion\s+\d|\s*$)/gi;
-    /** @type {{v:string, lines:string[]}[]} */
-    const entries = [];
-    let m;
-    while ((m = rx.exec(readmeText)) !== null) {
-      const v = (m[1] || "").trim();
-      const block = (m[2] || "").trim();
-      if (!isNewerVersion(v, currentVersion)) continue;
-
-      // Split to lines, drop empties, trim
-      let lines = block.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-
-      // If the first non-empty line looks like a date line, drop it
-      if (lines.length && /(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|\d{1,2}\.\s*[A-Za-z]+|\d{1,2}:\d{2})/i.test(lines[0])) {
-        lines.shift();
-      }
-      // Cap noisy blocks
-      if (lines.length > 8) lines = lines.slice(0, 8).concat(["…"]);
-
-      entries.push({ v, lines });
-    }
-
-    // Build compact human text
-    if (!entries.length) return null;
-
-    const chunks = [];
-    for (const e of entries) {
-      if (!e.lines.length) continue;
-      chunks.push(
-        `v${e.v}\n - ${e.lines.join("\n - ")}`
-      );
-    }
-    // Limit total size shown in the confirm
-    let text = chunks.join("\n\n");
-    const maxChars = 1200;
-    if (text.length > maxChars) {
-      text = text.slice(0, maxChars - 20).replace(/\s+$/, "") + "\n…";
-    }
-    return text;
+  function getVersionFromMeta(metaStr){
+    const m = /@version\s+([0-9.]+)/i.exec(metaStr || "");
+    return m ? m[1] : null;
   }
 
-  // ---- network helpers ------------------------------------------------------
-  function httpGet(url) {
-    return new Promise((resolve, reject) => {
+  function gmFetch(url){
+    return new Promise((resolve,reject)=>{
       GM_xmlhttpRequest({
-        method: "GET",
-        url,
-        onload: res => res.status === 200 ? resolve(res.responseText) : reject(new Error("HTTP " + res.status)),
-        onerror: err => reject(err)
+        method:"GET", url,
+        headers: { "Accept": "text/plain; charset=utf-8" },
+        onload:res=>res.status===200 ? resolve(res.responseText) : reject(new Error("HTTP "+res.status)),
+        onerror:e=>reject(e)
       });
     });
   }
 
-  // ---- main check -----------------------------------------------------------
-  async function checkForUpdates() {
-    const updateURL = GM_info.script.updateURL;
-    const currentVersion = GM_info.script.version;
+  // --- robust README parser ---
+  function extractReleaseNotes(mdText, version){
+    try{
+      let txt = String(mdText || "");
+      txt = txt.replace(/^\uFEFF/, "");      // strip BOM
+      txt = txt.replace(/\r\n/g, "\n");      // normalize EOL
 
-    try {
-      console.log(`Checking for updates... Current version: ${currentVersion}`);
-      const meta = await httpGet(updateURL);
-      const m = meta.match(/@version\s+([\d.]+)/);
-      const latestVersion = m ? m[1] : null;
-      console.log(`Checked and verified version. Latest version: ${latestVersion}`);
+      // Try exact section first
+      const vEsc = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const startRe = new RegExp(`^\\s{0,3}###\\s*Version\\s*${vEsc}\\b.*$`, "mi");
+      let m = startRe.exec(txt);
 
-      if (!latestVersion || !isNewerVersion(latestVersion, currentVersion)) return;
-
-      // Fetch README and build "what's new"
-      let whatsNew = "";
-      try {
-        const readme = await httpGet(README_URL);
-        const notes = parseReleaseNotes(readme, currentVersion);
-        if (notes) {
-          whatsNew = `\n\nWhat's new since v${currentVersion}:\n\n${notes}\n`;
-        }
-      } catch (e) {
-        console.warn("[Update] Failed to read README:", e);
+      // Fallback to first version block
+      if (!m) {
+        console.debug("[Cachetur/update] Exact section not found for", version, "- falling back to first version block");
+        m = /^\s{0,3}###\s*Version\s*\d[\d.]*.*$/mi.exec(txt);
+        if (!m) return "";
       }
+      const start = m.index;
+      const after = txt.slice(start + 1);
+      const next  = /\n\s{0,3}###\s*Version\s*\d[\d.]*/mi.exec(after);
+      const end   = next ? (start + 1 + next.index) : txt.length;
 
-      // Ask to update, include changelog snippet when available
-      const msg =
-        `A new version (${latestVersion}) of The Cachetur Assistant is available.` +
-        (whatsNew || "") +
-        `\nDo you want to update now?`;
+      let block = txt.slice(start, end);
+      block = block.replace(/^\s{0,3}###[^\n]*\n?/, ""); // drop heading
 
-      if (confirm(msg)) {
-        GM_openInTab(GM_info.script.downloadURL, { active: true });
-      } else if (whatsNew === "") {
-        // Optional: offer to open README if we couldn't show notes inline
-        if (confirm("Open the release notes?")) {
-          GM_openInTab(README_URL, { active: true });
-        }
-      }
-    } catch (e) {
-      console.warn("[Update] Update check failed:", e);
+      const lines   = block.split("\n").map(l => l.trim()).filter(Boolean);
+      const bullets = lines.filter(l => /^[-*]\s+/.test(l)).map(l => l.replace(/^[-*]\s+/, ""));
+      if (bullets.length) return "<ul>" + bullets.map(li => "<li>"+escHtml(li)+"</li>").join("") + "</ul>";
+
+      // Skip obvious date line and show a short snippet
+      const content = lines.filter((l,idx)=> !(idx===0 && /^[A-Za-z].*\d/.test(l) && !/^[-*]/.test(l)));
+      const snippet = content.slice(0,6).join("\n");
+      return snippet ? "<pre style='white-space:pre-wrap;margin:0'>" + escHtml(snippet) + "</pre>" : "";
+    } catch(e){
+      console.warn("[Cachetur/update] extractReleaseNotes failed:", e);
+      return "";
     }
   }
 
-  // Kick off + schedule
+  function ensureToastCss(){
+    if(window.__ctToastCss) return;
+    window.__ctToastCss = true;
+    GM_addStyle(`
+      .ct-toast { position:fixed; right:16px; bottom:16px; z-index:999999;
+        max-width:420px; padding:14px 14px 12px; border-radius:10px;
+        background:#1f2937; color:#e5e7eb; box-shadow:0 10px 30px rgba(0,0,0,.35);
+        font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+      .ct-toast h4{ margin:0 0 6px; font-size:16px; color:#fff; }
+      .ct-toast p{ margin:0 0 8px; color:#cbd5e1; }
+      .ct-toast ul{ margin:6px 0 10px 18px; padding:0; }
+      .ct-toast li{ margin:4px 0; }
+      .ct-toast .ct-actions{ display:flex; gap:8px; margin-top:10px; }
+      .ct-toast button{ border:0; border-radius:8px; padding:8px 12px; cursor:pointer;
+        background:#10b981; color:#001; font-weight:600; }
+      .ct-toast button.ct-secondary{ background:#374151; color:#e5e7eb; }
+      .ct-toast .ct-close{ position:absolute; right:10px; top:8px; cursor:pointer; color:#9ca3af; }
+      @media (max-width:600px){ .ct-toast{ left:16px; right:16px; } }
+    `);
+  }
+
+  function showUpdateToast(version, htmlNotes, downloadUrl, onLater, onUpdate){
+    ensureToastCss();
+    const wrap = document.createElement("div");
+    wrap.className = "ct-toast";
+    wrap.innerHTML =
+      `<div class="ct-close" aria-label="Close">✕</div>
+       <h4>The Cachetur Assistant ${escHtml(version)} is available</h4>
+       <p><strong>What's new</strong></p>
+       <div class="ct-notes">${htmlNotes || "<em>(No notes)</em>"}</div>
+       <div class="ct-actions">
+         <button class="ct-update">Update</button>
+         <button class="ct-secondary ct-later">Later</button>
+       </div>`;
+    document.body.appendChild(wrap);
+
+    const close = ()=>wrap.remove();
+    wrap.querySelector(".ct-later").onclick = ()=>{ onLater && onLater(); close(); };
+    wrap.querySelector(".ct-close").onclick = ()=>{ onLater && onLater(); close(); }; // treat X as Later
+    wrap.querySelector(".ct-update").onclick = ()=>{
+      onUpdate && onUpdate();
+      GM_openInTab(downloadUrl, {active:true});
+      close();
+    };
+  }
+
+  function getLastNotified(){
+    const v = GM_getValue(LAST_NOTIFIED_KEY, null);
+    if (typeof v === "string") return { version: v, at: 0 }; // migration from old format
+    if (v && typeof v === "object" && v.version) return v;
+    return null;
+  }
+
+  async function checkForUpdates(){
+    try{
+      const updateURL   = GM_info.script.updateURL;
+      const downloadURL = GM_info.script.downloadURL;
+      const current     = GM_info.script.version;
+      console.log(`[Cachetur/update] Checking… current=${current}`);
+      if (!updateURL){ console.warn("[Cachetur/update] No updateURL in metadata"); return; }
+
+      const meta   = await gmFetch(updateURL);
+      const latest = getVersionFromMeta(meta);
+      console.log(`[Cachetur/update] Latest in meta: ${latest}`);
+      if (!latest || !isNewerVersion(latest, current)) return;
+
+      // Snooze logic: don't nag again within REMIND_AFTER_MS for the same version
+      const last = getLastNotified();
+      if (last && last.version === latest && (Date.now() - last.at) < REMIND_AFTER_MS) {
+        const left = Math.ceil((REMIND_AFTER_MS - (Date.now() - last.at)) / (60*60*1000));
+        console.debug(`[Cachetur/update] Snoozed ${latest}, ~${left}h left`);
+        return;
+      }
+
+      let notesHtml = "";
+      try{
+        const readme = await gmFetch(README_RAW_URL);
+        notesHtml = extractReleaseNotes(readme, latest);
+        if (!notesHtml) console.debug("[Cachetur/update] README fetched but notes parsed empty");
+      } catch(e){
+        console.warn("[Cachetur/update] README fetch failed:", e);
+      }
+
+      const snooze = ()=>GM_setValue(LAST_NOTIFIED_KEY, { version: latest, at: Date.now() });
+      const silenceNow = ()=>GM_setValue(LAST_NOTIFIED_KEY, { version: latest, at: Date.now() });
+
+      try{
+        showUpdateToast(latest, notesHtml, downloadURL, snooze, silenceNow);
+      } catch(e){
+        console.warn("[Cachetur/update] Toast failed, fallback to confirm():", e);
+        if (confirm(`A new version (${latest}) of The Cachetur Assistant is available.\nDo you want to update now?`)) {
+          GM_openInTab(downloadURL, {active:true});
+          silenceNow();
+        } else {
+          snooze();
+        }
+      }
+    } catch (err){
+      console.warn("[Cachetur/update] Update check failed:", err);
+    }
+  }
+
+  // small delay so <body> exists; then poll hourly
+  setTimeout(checkForUpdates, 2000);
   setInterval(checkForUpdates, CHECK_INTERVAL);
-  checkForUpdates();
 })();
 /// End of version check/update
 
@@ -580,7 +628,7 @@ function ctStart() {
 
 function ctPreInit() {
     console.log("Continuing init of Cacheturassistenten");
-    if (_ctPage !== "pgc_map" && _ctPage !== "pgc_vgps" && _ctPage !== "bobil" && _ctPage !== "gc_map_new" && _ctPage !== "gc_gctour" && _ctPage !== "gc_map_live" && _ctPage !== "gc_map" && _ctPage !== "gc_geocache" && _ctPage !== "gc_bmlist" && $(".logged-in-user").length < 1) {
+    if (_ctPage !== "pgc_map" && _ctPage !== "pgc_map2" && _ctPage !== "pgc_vgps" && _ctPage !== "bobil" && _ctPage !== "gc_map_new" && _ctPage !== "gc_gctour" && _ctPage !== "gc_map_live" && _ctPage !== "gc_map" && _ctPage !== "gc_geocache" && _ctPage !== "gc_bmlist" && $(".logged-in-user").length < 1) {
         $(document).bind("DOMSubtreeModified.cachetur-init", function() {
             if ($(".profile-panel.detailed").length > 0) {
                 $(document).unbind("DOMSubtreeModified.cachetur-init");
@@ -676,7 +724,7 @@ function ctInitNotLoggedIn() {
         if (_ctPage === "gc_geocache" || _ctPage === "gc_bmlist" || _ctPage === "bobil") GM_addStyle("nav .wrapper { max-width: unset; } #cachetur-header { padding: 8px 1em 18px 2em; } #gc-header nav {align-items: center; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px;  } ");
         else if (_ctPage === "gc_map_new" || _ctPage === "gc_gctour" || _ctPage === "gc_map_live") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
         else if (_ctPage === "gc_map") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #cachetur-header-text { padding-right: 3px; float:left; margin-top: -12px; }");
-        else if (_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 7px; }");
+        else if (_ctPage === "pgc_map" || _ctPage === "pgc_map2" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 7px; }");
         if ($('#GClh_II_running')[0] && $('gclh_nav#ctl00_gcNavigation')[0]) {
             ctPrependToHeader2('<li id="cachetur-header"><span id="cachetur-header-text"><a href="https://cachetur.no/" target="_blank"><img src="https://cachetur.net/img/logo_top.png" alt="cachetur.no" /> ' + i18next.t('menu.notloggedin') + '<br>' + i18next.t('menu.deactivated') + '</span></a></li>');
             var liText = '',
@@ -731,7 +779,7 @@ function ctInitInactive() {
         if (_ctPage === "gc_geocache" || _ctPage === "gc_bmlist" || _ctPage === "bobil") GM_addStyle("nav .wrapper { max-width: unset; } #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #gc-header nav {align-items: center; height: fit-content; box-sizing: border-box; display: flex; max-width: fit-content; min-height: 80px; overflow: visible; padding: 0 12px; position: relative !important; width: 100vw;} #cachetur-header { padding: 8px 1em 22px 2em; } #cachetur-tur-valg { float:left; width: 200px; height: 24px; overflow: hidden; background: #eee; color: black; border: 1px solid #ccc; } #cachetur-header-text { padding-right: 3px; float:left;  } ");
         else if (_ctPage === "gc_map") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #cachetur-header-text { padding-right: 3px; float:left; }");
         else if (_ctPage === "gc_map_new"  || _ctPage === "gc_gctour" || _ctPage === "gc_map_live") GM_addStyle("#cachetur-header button { width: 26px; } #cachetur-header { ;padding-top:8px; } #gc-header {background-color: #02874d; color: white; font-size: 16px; height: fit-content; width: 100%;} .player-profile {width: fit-content;} #cachetur-header-text { padding-right: 3px; float:left; }");
-        else if (_ctPage === "pgc_map" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 12px; }");
+        else if (_ctPage === "pgc_map" || _ctPage === "pgc_map2" || _ctPage === "pgc_vgps") GM_addStyle("#cachetur-header { margin-top: 12px; }");
 
         if ($('#GClh_II_running')[0] && $('gclh_nav#ctl00_gcNavigation')[0]) {
 
@@ -769,7 +817,7 @@ function ctMarkPageOnBody() {
 // 1) Give the header a page-specific class
 // ─────────────────────────────────────────────────────────────────────────────
 function ctHeaderClass() {
-  if (_ctPage === 'pgc_map' || _ctPage === 'pgc_vgps') return 'ct-pgc';
+  if (_ctPage === 'pgc_map' || _ctPage === "pgc_map2" || _ctPage === 'pgc_vgps') return 'ct-pgc';
   if (_ctPage === 'gc_gctour') return 'ct-gctour';
   if (_ctPage === 'gc_map_new' || _ctPage === 'gc_map_live' || _ctPage === 'gc_bmlist') return 'ct-gc-react';
   if (_ctPage === 'gc_geocache' || _ctPage === 'gc_map') return 'ct-gc-classic';
@@ -962,7 +1010,7 @@ function ctPrependToHeader(data) {
     header = $('.user-menu');
   } else if (_ctPage === "bobil") {
     header = $('.navbar-right');
-  } else if (["pgc_map","pgc_vgps"].includes(_ctPage)) {
+  } else if (["pgc_map","pgc_map2","pgc_vgps"].includes(_ctPage)) {
     header = $('#pgc-navbar-body > ul.navbar-nav').last();
   }
 
@@ -973,24 +1021,140 @@ function ctPrependToHeader(data) {
 }
 
 function ctPrependToHeader2(data) {
-  console.log("Injecting cachetur.no in menu");
+  console.log("Injecting cachetur.no in menu (GClh-nav)");
 
-  let header = null;
-  if (["gc_map","gc_gctour","gc_map_new","gc_bmlist","gc_geocache"].includes(_ctPage)) {
-    header = $('#ctl00_uxLoginStatus_divSignedIn');
-    GM_addStyle("gclh_nav .wrapper { max-width: unset; padding-left: 50px; padding-right: 50px; }");
-  } else if (_ctPage === "bobil") {
-    header = $('.navbar-right');
-  } else if (["pgc_map","pgc_vgps"].includes(_ctPage)) {
-    header = $('#pgcMainMenu ul.navbar-right');
+  // Find GClh wrapper + both lists
+  const $wrap  = $('gclh_nav#ctl00_gcNavigation .wrapper');
+  const $menu  = $wrap.find('ul.menu').first();
+  const $login = $wrap.find('ul#ctl00_uxLoginStatus_divSignedIn').first();
+
+  // Only do the "between" placement on gc_map / gc_gctour when GClh II is present
+  const onGcOldTopbar =
+    $('#GClh_II_running').length > 0 &&
+    $wrap.length > 0 && $menu.length > 0 && $login.length > 0 &&
+    (_ctPage === 'gc_map' || _ctPage === 'gc_gctour');
+
+  if (onGcOldTopbar) {
+    if (!document.getElementById('cachetur-header')) {
+      // Insert Cachetur <li> right AFTER the main menu list (i.e. between menu and login area)
+      $menu.after(data);
+    }
+
+    // Layout + theme fixes for classic GClh topbar
+    GM_addStyle(`
+      /* Make the outer nav and wrapper span the full width and start from the very left */
+      gclh_nav {
+        width: 100% !important;
+        display: block !important;
+        height: auto !important;            /* auto height, we keep min-height on wrapper */
+        position: static !important;
+      }
+
+      gclh_nav .wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important; /* start everything at the left edge */
+        gap: 10px !important;
+        flex-wrap: nowrap !important;
+
+        width: 100% !important;
+        height: auto !important;
+        min-height: 80px !important;
+
+        /* kill any centering/max-width from site CSS */
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
+        background-color: #02874d !important; /* keep GC green */
+        box-sizing: border-box !important;
+      }
+
+      /* Main menu as a horizontal row */
+      gclh_nav ul.menu {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      gclh_nav ul.menu > li { list-style: none !important; }
+      gclh_nav ul.menu > li::marker { content: none !important; }
+
+      /* User panel on the far right */
+      gclh_nav #ctl00_uxLoginStatus_divSignedIn {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-left: auto !important; /* push to the right */
+        padding: 0 !important;
+      }
+      gclh_nav #ctl00_uxLoginStatus_divSignedIn > li { list-style: none !important; }
+      gclh_nav #ctl00_uxLoginStatus_divSignedIn > li::marker { content: none !important; }
+
+      /* Our injected Cachetur header (<li>) */
+      gclh_nav #cachetur-header {
+        list-style: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 6px !important;
+        padding: 0 !important;
+        height: auto !important;            /* never force 80px height here */
+        line-height: 1.3 !important;
+      }
+      gclh_nav #cachetur-header::marker { content: none !important; }
+      gclh_nav #cachetur-header select { height: 28px !important; }
+
+      /* Prevent clipping of any dropdowns/menus */
+      gclh_nav .wrapper, gclh_nav { overflow: visible !important; }
+    `);
+
+  } else {
+    // Fallback for other pages
+    let header = null;
+    if (["gc_map","gc_gctour","gc_map_new","gc_bmlist","gc_geocache"].includes(_ctPage)) {
+      header = $('#ctl00_uxLoginStatus_divSignedIn');
+      GM_addStyle(`
+        /* Full-width, left-aligned on React/new pages too */
+        gclh_nav { width: 100% !important; display: block !important; height: auto !important; }
+        gclh_nav .wrapper {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          gap: 10px !important;
+          width: 100% !important;
+          height: auto !important;
+          min-height: 80px !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+          background-color: #02874d !important;
+          box-sizing: border-box !important;
+        }
+      `);
+    } else if (_ctPage === "bobil") {
+      header = $('.navbar-right');
+    } else if (["pgc_map","pgc_map2","pgc_vgps"].includes(_ctPage)) {
+      header = $('#pgcMainMenu ul.navbar-right');
+    }
+
+    if (header && header.length && !document.getElementById('cachetur-header')) {
+      // Keep it a <li> inside the existing <ul>
+      header.prepend(data);
+      GM_addStyle(`
+        #cachetur-header { list-style: none !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; }
+        #cachetur-header::marker { content: none !important; }
+      `);
+    }
   }
 
-  if (header && header.length) {
-    ctInsert(data, header, 'prepend');
-    ctApplyHeaderTheme(); // <— legger på riktig tema-klasse
-  }
+  // Apply current theme/colors for Cachetur header content (existing helper)
+  ctApplyHeaderTheme();
 }
-
 
 function ctPrependTouser(data) {
 
@@ -1419,7 +1583,9 @@ function ctGetUnsafeLeafletObject() {
         "gc_map_new": () => unsafeWindow.cacheturGCMap || null,
         "gc_gctour":   () => unsafeWindow.cacheturGCMap || null,  // NY
         "bobil": () => unsafeWindow.map || null,
-        "pgc_map": () => (unsafeWindow.PGC_LiveMap ? unsafeWindow.PGC_LiveMap.map : (unsafeWindow.freeDraw && unsafeWindow.freeDraw.map ? unsafeWindow.freeDraw.map : null))
+        "pgc_map": () => (unsafeWindow.PGC_LiveMap ? unsafeWindow.PGC_LiveMap.map : (unsafeWindow.freeDraw && unsafeWindow.freeDraw.map ? unsafeWindow.freeDraw.map : null)),
+        "pgc_map2": () => (unsafeWindow.PGC_LiveMap ? unsafeWindow.PGC_LiveMap.map : (unsafeWindow.freeDraw && unsafeWindow.freeDraw.map ? unsafeWindow.freeDraw.map : null))
+
     };
     const fn = resolvers[_ctPage];
     return fn ? fn() : null;
@@ -1494,6 +1660,10 @@ function ctInitAddLinks() {
       break;
 
    case "pgc_map":
+        ctInitPGCMap();
+    break;
+
+    case "pgc_map2":
         ctInitPGCMap();
     break;
 
@@ -1641,7 +1811,11 @@ function ctWatchNewMap() {
 
 // --- PGC init: inject on data-cacheid changes (robust for re-renders) ---
 function ctInitPGCMap() {
-    if (_ctPage !== "pgc_map" || window.location.pathname.indexOf("/Tools/") === -1) return;
+// Allow both PGC map modes; require a Leaflet-based Tools or Maps page
+const path = (window.location.pathname || "").toLowerCase();
+if ((_ctPage !== "pgc_map" && _ctPage !== "pgc_map2") || !(path.includes("/tools/") || path.includes("/maps/"))) {
+  return;
+}
     if (window.__ctPGCInitDone) return;
     const map = ctGetUnsafeLeafletObject();
     if (!map) return;
@@ -1996,6 +2170,18 @@ function ctAddToCoordInfoLink(code) {
         );
         ctUpdateAddImage();
 
+    } else if (_ctPage === "pgc_map2") {
+        // Project-GC (unchanged)
+        const $root = findRoot(code);
+        insertAfterLinks($root,
+            '<div class="links Clear cachetur-controls-container">' +
+              '<a href="#" class="cachetur-add-code" style="cursor:pointer;" data-code="' + gcCode + '">' +
+                '<img src="https://cachetur.no/api/img/cachetur-15.png" /> ' + i18next.t("send") +
+              '</a>' +
+            '</div>'
+        );
+        ctUpdateAddImage();
+
     } else if (_ctPage === "gc_map_new") {
         // New GC map (unchanged)
         $(".cache-preview-action-menu").prepend(
@@ -2166,15 +2352,25 @@ function ctPGCSelectVGPS() {
 }
 
 function ctPGCMarkFound() {
-    if (_ctPage !== "pgc_map") return;
+  // Run on both PGC Live Map and other Tools maps that use Leaflet
+  if (_ctPage !== "pgc_map" && _ctPage !== "pgc_map2") return;
 
-    let map = ctGetUnsafeLeafletObject();
-    if (map === null) return;
+  const map = ctGetUnsafeLeafletObject();
+  if (!map) {
+    console.warn("[Cachetur] ctPGCMarkFound: Leaflet map not found");
+    return;
+  }
 
-    map.eachLayer(function(layer) {
-        ctPGCCheckAndMarkLayer(layer);
-    });
+  // Iterate over all layers and apply marker logic
+  map.eachLayer(function (layer) {
+    try {
+      ctPGCCheckAndMarkLayer(layer);
+    } catch (err) {
+      console.error("[Cachetur] ctPGCMarkFound: error while marking layer:", err);
+    }
+  });
 }
+
 
 function ctPGCCheckAndMarkLayer(layer) {
     let realLayer = layer.layer ? layer.layer : layer;
@@ -2287,18 +2483,91 @@ function ctCheckList() {
 }
 
 function ctUpdateAddImage(codeAddedTo) {
-    ctPGCMarkFound();
-
-    let imgs = $(".cachetur-add-code");
+    // Update all "send to cachetur" controls in the current popup(s)
+    const imgs = $(".cachetur-add-code");
     if (imgs.length <= 0) return;
 
     imgs.each(function () {
-        let img = $(this);
-        let code = img.data("code");
+        const img = $(this);
+        const code = img.data("code");
 
-        let codeIsAdded = codeAddedTo === code || ctCodeAlreadyAdded(code);
+        // Added just now OR previously added
+        const codeIsAdded = codeAddedTo === code || ctCodeAlreadyAdded(code);
 
+        // Keep existing behavior (e.g., found-by text on GC pages)
         ctSetIconForCode(code);
+
+        // ---------- PGC: ensure a dedicated toolbar row placed BELOW vGPS ----------
+        if (_ctPage === "pgc_map" || _ctPage === "pgc_map2") {
+            const content = img.closest('.leaflet-popup-content');
+            const vgpsBr = content.find('.addtovgps').first().next('br');
+
+            // Create/find toolbar row
+            let toolbar = content.find(".cachetur-pgc-toolbar");
+            if (toolbar.length === 0) {
+                toolbar = $('<div class="cachetur-pgc-toolbar" ' +
+                    'style="display:block; clear:both; position:relative; height:18px; margin-top:4px; z-index:2;"></div>');
+                if (vgpsBr.length) vgpsBr.after(toolbar); else toolbar.insertBefore(img);
+            }
+
+            // Move the "send" icon into the toolbar and position it (left: 20px)
+            toolbar.append(img);
+            img.css({ position: "absolute", top: 0, left: "20px", cursor: "pointer", zIndex: 2 });
+            img.attr("title", codeIsAdded ? i18next.t('sent') : i18next.t('send'));
+            img.attr("src", codeIsAdded
+                ? "https://cachetur.no/api/img/cachetur-15-success.png"
+                : "https://cachetur.no/api/img/cachetur-15.png");
+
+            // If added → ensure comment + priorities exist (idempotent)
+            if (codeIsAdded) {
+                // Comment icon (left: 60px)
+                if (toolbar.find('.cachetur-add-comment[data-code="' + code + '"]').length === 0) {
+                    const commentControl = $(
+                        '<img src="https://cachetur.no/api/img/cachetur-comment.png" ' +
+                        ' data-code="' + code + '" title="' + i18next.t('comments.add') + '" ' +
+                        ' class="cachetur-add-comment" ' +
+                        ' style="position:absolute; top:0; left:60px; cursor:pointer; z-index:2;" />'
+                    );
+                    toolbar.append(commentControl);
+
+                    // Click handler
+                    commentControl.on("click", function (evt) {
+                        evt.stopImmediatePropagation();
+                        evt.preventDefault();
+                        const tur = $("#cachetur-tur-valg").val();
+                        const commentImg = $(this);
+                        const commentCode = commentImg.data("code");
+                        const comment = prompt(i18next.t('comments.description'));
+
+                        ctApiCall("planlagt_add_code_comment", { tur: tur, code: commentCode, comment: comment }, function (data) {
+                            if (data === "Ok") {
+                                commentImg.attr("src", "https://cachetur.no/api/img/cachetur-comment-success.png")
+                                          .attr("title", i18next.t('comments.saved'));
+                            } else {
+                                commentImg.attr("src", "https://cachetur.no/api/img/cachetur-comment-error.png")
+                                          .attr("title", i18next.t('comments.error'));
+                            }
+                        });
+
+                        GM_setValue("cachetur_last_action", Date.now());
+                    });
+                }
+
+                // Priority icons only for non-template trips (ID NOT ending with 'T')
+                if (!$("#cachetur-tur-valg").val().endsWith('T')) {
+                    if (toolbar.find('.cachetur-set-pri-1[data-code="' + code + '"]').length === 0) ctCreatePriorityControl(img, code, 1);
+                    if (toolbar.find('.cachetur-set-pri-2[data-code="' + code + '"]').length === 0) ctCreatePriorityControl(img, code, 2);
+                    if (toolbar.find('.cachetur-set-pri-3[data-code="' + code + '"]').length === 0) ctCreatePriorityControl(img, code, 3);
+                }
+            } else {
+                // Not added → keep only the send icon inside the toolbar on PGC
+                const toolbar = img.parent();
+                toolbar.find('.cachetur-add-comment, .cachetur-set-pri-1, .cachetur-set-pri-2, .cachetur-set-pri-3').remove();
+            }
+
+            // Do NOT return; geocaching.com branches below should still execute for their pages
+        }
+        // ---------- /PGC toolbar handling ----------
 
         if (codeIsAdded) {
             if (_ctPage === "gc_geocache") {
@@ -2310,86 +2579,46 @@ function ctUpdateAddImage(codeAddedTo) {
             } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
                 img.html('<img src="https://cachetur.no/api/img/cachetur-15-success.png" /> ' + i18next.t('sent'));
             } else {
+                // PGC handled above; keep as-is here for other IMG-only pages
                 img.attr("src", "https://cachetur.no/api/img/cachetur-15-success.png");
                 img.attr("title", i18next.t('sent'));
             }
-            if (img.parent().parent().find(".cachetur-add-comment").length > 0) return;
 
-            let style = "padding-right: 5px;";
-            if (_ctPage === "pgc_map") {
-                style = "left: 60px;";
-            }
-
-            let commentControl;
+            // Only create GC comment/priority controls on GC pages (PGC handled above)
             if (_ctPage === "gc_geocache") {
-                let li = $('<li></li>');
-                commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '">' + i18next.t('comments.add') + '</a>');
-                li.append(commentControl);
-                $("#cachetur-controls-container").append(li);
+                if ($("#cachetur-controls-container .cachetur-add-comment[data-code='" + code + "']").length === 0) {
+                    const li = $('<li></li>');
+                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '">' + i18next.t('comments.add') + '</a>');
+                    li.append(commentControl);
+                    $("#cachetur-controls-container").append(li);
+                }
+                if (!$("#cachetur-tur-valg").val().endsWith('T')) {
+                    ctCreatePriorityControl(img, code, 1);
+                    ctCreatePriorityControl(img, code, 2);
+                    ctCreatePriorityControl(img, code, 3);
+                }
             } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                let li = $('<li></li>');
-                commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
-                img.parent().append(commentControl);
-                li.append(commentControl);
-                $("#cachetur-controls-container").append(li);
+                if ($("#cachetur-controls-container .cachetur-add-comment[data-code='" + code + "']").length === 0) {
+                    const li = $('<li></li>');
+                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
+                    li.append(commentControl);
+                    $("#cachetur-controls-container").append(li);
+                }
+                if (!$("#cachetur-tur-valg").val().endsWith('T')) {
+                    ctCreatePriorityControl(img, code, 1);
+                    ctCreatePriorityControl(img, code, 2);
+                    ctCreatePriorityControl(img, code, 3);
+                }
             } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
-                commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
-                img.parent().append(commentControl);
-            } else {
-                commentControl = $(' <img src="https://cachetur.no/api/img/cachetur-comment.png" data-code="' + code + '" title="' + i18next.t('comments.add') + '" class="cachetur-add-comment" style="cursor: pointer; ' + style + '" /> ');
-                img.parent().prepend(commentControl);
-            }
-
-            commentControl.click(function (evt) {
-                evt.stopImmediatePropagation();
-                evt.preventDefault();
-
-                let tur = $("#cachetur-tur-valg").val();
-                let commentImg = $(this);
-                let commentCode = commentImg.data("code");
-                let comment = prompt(i18next.t('comments.description'));
-
-                ctApiCall("planlagt_add_code_comment", {
-                    tur: tur,
-                    code: commentCode,
-                    comment: comment
-
-                }, function (data) {
-
-                    if (data === "Ok") {
-                        if (_ctPage === "gc_geocache") {
-                            commentImg.addClass("cachetur-add-comment-success");
-                            commentImg.html(i18next.t('comments.saved'));
-                        } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                            commentImg.html('<img src="https://cachetur.no/api/img/cachetur-comment-success.png" /> ' + i18next.t('comments.saved'));
-                        } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
-                            commentImg.html('<img src="https://cachetur.no/api/img/cachetur-comment-success.png" /> ' + i18next.t('comments.saved'));
-                        } else {
-                            commentImg.attr("src", "https://cachetur.no/api/img/cachetur-comment-success.png");
-                            commentImg.attr("title", i18next.t('comments.saved'));
-                        }
-                    } else {
-                        if (_ctPage === "gc_geocache") {
-                            commentImg.addClass("cachetur-add-comment-error");
-                            commentImg.html(i18next.t('comments.error'));
-                        } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                            commentImg.html('<img src="https://cachetur.no/api/img/cachetur-comment-error.png" /> ' + i18next.t('comments.error'));
-                        } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
-                            commentImg.html('<img src="https://cachetur.no/api/img/cachetur-comment-error.png" /> ' + i18next.t('comments.error'));
-                        } else {
-                            commentImg.attr("src", "https://cachetur.no/api/img/cachetur-comment-error.png");
-                            commentImg.attr("title", i18next.t('comments.error'));
-                        }
-                    }
-                });
-
-                GM_setValue("cachetur_last_action", Date.now());
-            });
-
-            if (!$("#cachetur-tur-valg").val().endsWith('T')) {
-                ctCreatePriorityControl(img, code, 1);
-                ctCreatePriorityControl(img, code, 2);
-                ctCreatePriorityControl(img, code, 3);
+                if (img.parent().find(".cachetur-add-comment[data-code='" + code + "']").length === 0) {
+                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
+                    img.parent().append(commentControl);
+                }
+                if (!$("#cachetur-tur-valg").val().endsWith('T')) {
+                    ctCreatePriorityControl(img, code, 1);
+                    ctCreatePriorityControl(img, code, 2);
+                    ctCreatePriorityControl(img, code, 3);
+                }
             }
         } else {
             if (_ctPage === "gc_geocache") {
@@ -2407,18 +2636,10 @@ function ctUpdateAddImage(codeAddedTo) {
                 img.parent().parent().find(".cachetur-set-pri-3").parent().remove();
             } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
                 img.html('<img src="https://cachetur.no/api/img/cachetur-15.png" /> ' + i18next.t('send'));
-                img.parent().find(".cachetur-add-comment").remove();
-                img.parent().find(".cachetur-set-pri-1").remove();
-                img.parent().find(".cachetur-set-pri-2").remove();
-                img.parent().find(".cachetur-set-pri-3").remove();
-                img.parent().find(".cachetur-found-by").remove();
+                img.parent().find(".cachetur-add-comment, .cachetur-set-pri-1, .cachetur-set-pri-2, .cachetur-set-pri-3, .cachetur-found-by").remove();
             } else {
-                img.attr("src", "https://cachetur.no/api/img/cachetur-15.png");
-                img.attr("title", i18next.t('send'));
-                img.parent().find(".cachetur-add-comment").remove();
-                img.parent().find(".cachetur-set-pri-1").remove();
-                img.parent().find(".cachetur-set-pri-2").remove();
-                img.parent().find(".cachetur-set-pri-3").remove();
+                // PGC: already removed extras above; ensure default send icon
+                img.attr("src", "https://cachetur.no/api/img/cachetur-15.png").attr("title", i18next.t('send'));
                 img.parent().find(".cachetur-found-by").remove();
             }
         }
@@ -2427,71 +2648,94 @@ function ctUpdateAddImage(codeAddedTo) {
 
 function ctCreatePriorityControl(img, code, priority) {
     let control;
-    let style = "padding-right: 5px;";
-
-    if (_ctPage === "pgc_map") {
-        let left = 60 + priority * 20;
-        style = "left: " + left + "px";
-    }
 
     if (_ctPage === "gc_geocache") {
-        let li = $('<li></li>');
-        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '">' + i18next.t('priority.set' + priority) + '</a>');
+        // GC cache page: use the controls container and avoid duplicates
+        const container = $("#cachetur-controls-container");
+        const selector = '.cachetur-set-pri-' + priority + '[data-code="' + code + '"]';
+        if (container.find(selector).length > 0) return;
+
+        const li = $('<li></li>');
+        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '">' +
+                    i18next.t('priority.set' + priority) + '</a>');
         li.append(control);
-        $("#cachetur-controls-container").append(li);
+        container.append(li);
+
     } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-        let li = $('<li></li>').insertAfter(".cachetur-add-comment");
-        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '"><img src="https://cachetur.no/api/img/p' + priority + '.png" /> ' + i18next.t('priority.set' + priority) + '</a>');
+        // GC new/live map: use the controls container and avoid duplicates
+        const container = $("#cachetur-controls-container");
+        const selector = '.cachetur-set-pri-' + priority + '[data-code="' + code + '"]';
+        if (container.find(selector).length > 0) return;
+
+        const li = $('<li></li>').insertAfter(".cachetur-add-comment");
+        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '">' +
+                    '<img src="https://cachetur.no/api/img/p' + priority + '.png" /> ' +
+                    i18next.t('priority.set' + priority) + '</a>');
         li.append(control);
-        $("#cachetur-controls-container").append(li);
+        container.append(li);
+
     } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
-        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '"><img src="https://cachetur.no/api/img/p' + priority + '.png" /> ' + i18next.t('priority.set' + priority) + '</a>');
-        img.parent().append(control);
+        // GC classic map / GCTour: append next to the "sent" label and avoid duplicates
+        const container = img.parent(); // same parent as the "sent" link
+        const selector = '.cachetur-set-pri-' + priority + '[data-code="' + code + '"]';
+        if (container.find(selector).length > 0) return;
+
+        control = $('<a href class="cachetur-set-pri-' + priority + '" data-code="' + code + '">' +
+                    '<img src="https://cachetur.no/api/img/p' + priority + '.png" /> ' +
+                    i18next.t('priority.set' + priority) + '</a>');
+        container.append(control);
+
     } else {
-        control = $(' <img src="https://cachetur.no/api/img/p' + priority + '.png" data-code="' + code + '" title="' + i18next.t('priority.set' + priority) + '" class="cachetur-set-pri-' + priority + '" style="cursor: pointer; ' + style + '" /> ');
-        img.parent().prepend(control);
+        // PGC: add to the toolbar (row 1) at 80/100/120px; avoid duplicates
+        let toolbar = img.parent(); // on PGC, img.parent() should already be the toolbar
+        if (!toolbar.hasClass('cachetur-pgc-toolbar')) {
+            // Fallback: create toolbar below vGPS if missing, then move img into it
+            const content = img.closest('.leaflet-popup-content');
+            const vgpsBr = content.find('.addtovgps').first().next('br');
+            toolbar = $('<div class="cachetur-pgc-toolbar" ' +
+                        'style="display:block; clear:both; position:relative; height:18px; margin-top:4px; z-index:2;"></div>');
+            if (vgpsBr.length) vgpsBr.after(toolbar); else toolbar.insertBefore(img);
+            toolbar.append(img);
+            img.css({ position: "absolute", top: 0, left: "20px", cursor: "pointer", zIndex: 2 });
+        }
+
+        const selector = '.cachetur-set-pri-' + priority + '[data-code="' + code + '"]';
+        if (toolbar.find(selector).length > 0) return;
+
+        const left = 60 + priority * 20; // p1=80, p2=100, p3=120
+        control = $('<img src="https://cachetur.no/api/img/p' + priority + '.png" data-code="' + code + '"' +
+                    ' title="' + i18next.t('priority.set' + priority) + '" class="cachetur-set-pri-' + priority + '"' +
+                    ' style="position:absolute; top:0; left:' + left + 'px; cursor:pointer; z-index:2;" />');
+        toolbar.append(control);
     }
 
+    // Click handler (unchanged semantics)
     control.click(function (evt) {
         evt.stopImmediatePropagation();
         evt.preventDefault();
 
-        let tur = $("#cachetur-tur-valg").val();
-        let priorityImg = $(this);
-        let priorityCode = priorityImg.data('code');
+        const tur = $("#cachetur-tur-valg").val();
+        const priorityImg = $(this);
+        const priorityCode = priorityImg.data('code');
 
-        ctApiCall("planlagt_set_code_priority", {
-            tur: tur,
-            code: priorityCode,
-            priority: priority
-
-        }, function (data) {
-
+        ctApiCall("planlagt_set_code_priority", { tur: tur, code: priorityCode, priority: priority }, function (data) {
             if (data === "Ok") {
-                if (_ctPage === "gc_geocache") {
-                    priorityImg.addClass("cachetur-set-pri-" + priority + "-success");
-                    priorityImg.html(i18next.t('priority.saved'));
-                } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                    priorityImg.addClass("cachetur-set-pri-" + priority + "-success");
-                    priorityImg.html(i18next.t('priority.saved'));
+                if (_ctPage === "gc_geocache" || _ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+                    priorityImg.addClass("cachetur-set-pri-" + priority + "-success").html(i18next.t('priority.saved'));
                 } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
                     priorityImg.html('<img src="https://cachetur.no/api/img/p' + priority + '_success.png" /> ' + i18next.t('priority.saved'));
                 } else {
-                    priorityImg.attr("src", "https://cachetur.no/api/img/p" + priority + "_success.png");
-                    priorityImg.attr("title", i18next.t('priority.saved'));
+                    priorityImg.attr("src", "https://cachetur.no/api/img/p" + priority + "_success.png")
+                               .attr("title", i18next.t('priority.saved'));
                 }
             } else {
-                if (_ctPage === "gc_geocache") {
-                    priorityImg.addClass("cachetur-set-pri-" + priority + "-error");
-                    priorityImg.html(i18next.t('priority.error'));
-                } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                    priorityImg.addClass("cachetur-set-pri-" + priority + "-error");
-                    priorityImg.html(i18next.t('priority.error'));
+                if (_ctPage === "gc_geocache" || _ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+                    priorityImg.addClass("cachetur-set-pri-" + priority + "-error").html(i18next.t('priority.error'));
                 } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
                     priorityImg.html('<img src="https://cachetur.no/api/img/p' + priority + '_error.png" /> ' + i18next.t('priority.error'));
                 } else {
-                    priorityImg.attr("src", "https://cachetur.no/api/img/p" + priority + "_error.png");
-                    priorityImg.attr("title", i18next.t('priority.error'));
+                    priorityImg.attr("src", "https://cachetur.no/api/img/p" + priority + "_error.png")
+                               .attr("title", i18next.t('priority.error'));
                 }
             }
         });
@@ -2500,47 +2744,83 @@ function ctCreatePriorityControl(img, code, priority) {
     });
 }
 
-
 function ctCodeAlreadyAdded(code) {
     return _ctCodesAdded.indexOf(code) > -1;
 }
 
 function ctSetIconForCode(code) {
-    let id = $("#cachetur-tur-valg").val();
+    // Query backend for "found by" info for this code in the selected trip
+    const id = $("#cachetur-tur-valg").val();
 
-    ctApiCall("planlagt_check_find", {
-            "tur": id,
-            "code": code
-        },
-        function(foundBy) {
+    ctApiCall("planlagt_check_find", { tur: id, code: code }, function(foundBy) {
 
-            if (foundBy === "") return "";
+        if (foundBy === "") return "";
 
-            let img = $(".cachetur-add-code[data-code='" + code + "']");
-            if (img.length <= 0) return;
+        const img = $(".cachetur-add-code[data-code='" + code + "']");
+        if (img.length <= 0) return;
 
-            if ($(".cachetur-found-by[data-code='" + code + "']").length === 0) {
-                let style = "";
-                if (_ctPage === "pgc_map") {
-                    style = "left: 40px;";
-                }
-                if (_ctPage === "gc_geocache") {
-                    $("#cachetur-found-by-container").remove();
-                    $("#cachetur-controls-container").parent().append('<ul id="cachetur-found-by-container"><li><b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b></li><li>' + foundBy + "</li></ul>");
-                } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
-                    $("#cachetur-found-by-container").remove();
-                    $("#cachetur-controls-container").parent().append('<ul id="cachetur-found-by-container"><li><b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b></li><li>' + foundBy + "</li></ul>");
-                } else if (_ctPage === "gc_map") {
-                    img.closest(".map-item").find(".cachetur-found-by-container").remove();
-                    img.closest(".map-item").append('<div class="links Clear cachetur-found-by-container"><b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b> ' + foundBy + "</div>");
-                } else {
-                    img.parent().prepend(' <img class="cachetur-found-by" data-code="' + code + '" src="https://cachetur.no/api/img/attfind.png" title="' + i18next.t('foundby') + ' ' + foundBy + '" style="' + style + '" /> ');
-                }
-            }
+        // Avoid duplicates globally and per-popup
+        if ($(".cachetur-found-by[data-code='" + code + "']").length > 0) return;
+        const content = img.closest('.leaflet-popup-content');
+        if (content.find(".cachetur-found-by-container").length > 0) return;
+
+        // ----- Keep existing GC behavior unchanged -----
+        if (_ctPage === "gc_geocache") {
+            $("#cachetur-found-by-container").remove();
+            $("#cachetur-controls-container").parent().append(
+                '<ul id="cachetur-found-by-container">' +
+                    '<li><b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b></li>' +
+                    '<li>' + foundBy + '</li>' +
+                '</ul>'
+            );
+            return;
         }
-    );
+        if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+            $("#cachetur-found-by-container").remove();
+            $("#cachetur-controls-container").parent().append(
+                '<ul id="cachetur-found-by-container">' +
+                    '<li><b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b></li>' +
+                    '<li>' + foundBy + '</li>' +
+                '</ul>'
+            );
+            return;
+        }
+        if (_ctPage === "gc_map") {
+            img.closest(".map-item").find(".cachetur-found-by-container").remove();
+            img.closest(".map-item").append(
+                '<div class="links Clear cachetur-found-by-container">' +
+                    '<b><img src="https://cachetur.no/api/img/attfind.png" /> ' + i18next.t('foundby') + '</b> ' + foundBy +
+                '</div>'
+            );
+            return;
+        }
+        // ----- /GC behavior -----
+
+        // ----- PGC: put "Found by" on its own row BELOW the toolbar (and below vGPS) -----
+        const vgpsBr  = content.find('.addtovgps').first().next('br');
+        const toolbar = content.find('.cachetur-pgc-toolbar').last();
+
+        const foundLine = $(
+            '<div class="cachetur-found-by-container" ' +
+            '     style="display:block; clear:both; margin-top:4px; position:relative; z-index:2; ' +
+            '            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
+                '<b><img src="https://cachetur.no/api/img/attfind.png" style="vertical-align:text-bottom; margin-right:4px;" /> ' +
+                i18next.t('foundby') + '</b> ' + foundBy +
+            '</div>'
+        );
+
+        if (toolbar.length) {
+            foundLine.insertAfter(toolbar);
+        } else if (vgpsBr.length) {
+            foundLine.insertAfter(vgpsBr);
+        } else {
+            foundLine.insertAfter(img);
+        }
+        // ----- /PGC -----
+    });
 }
-           // Get url parameter.
+
+    // Get url parameter.
     function getURLParam(key) {
         var query = window.location.search.substring(1);
         var pairs = query.split('&');
