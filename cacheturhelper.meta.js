@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.2.2
+// @version         3.5.2.3
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -23,6 +23,7 @@
 // @match           http*://cachetur.no/bobilplasser
 // @connect         cachetur.no
 // @connect         cachetur.net
+// @connect         raw.githubusercontent.com
 // @connect         github.com
 // @connect         self
 // @grant           GM_xmlhttpRequest
@@ -46,6 +47,7 @@
 // @supportURL      https://github.com/cachetur-no/cachetur-assistant/issues
 // ==/UserScript==
 /* globals jQuery, $, waitForKeyElements, L, i18next, i18nextXHRBackend, i18nextBrowserLanguageDetector, cloneInto, gm_config */
+
 
 
 
