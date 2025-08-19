@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.2.3
+// @version         3.5.2.4
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -2530,17 +2530,20 @@ function ctUpdateAddImage(codeAddedTo) {
                     );
                     toolbar.append(commentControl);
 
-                    // Click handler
+                    // Dedicated click handler for PGC image button
                     commentControl.on("click", function (evt) {
+                        // Prevent closing of Leaflet popup and default behavior
                         evt.stopImmediatePropagation();
                         evt.preventDefault();
+
                         const tur = $("#cachetur-tur-valg").val();
                         const commentImg = $(this);
                         const commentCode = commentImg.data("code");
                         const comment = prompt(i18next.t('comments.description'));
+                        if (comment == null) return false; // User cancelled
 
                         ctApiCall("planlagt_add_code_comment", { tur: tur, code: commentCode, comment: comment }, function (data) {
-                            if (data === "Ok") {
+                            if (data === "Ok" || (data && data.ok === true)) {
                                 commentImg.attr("src", "https://cachetur.no/api/img/cachetur-comment-success.png")
                                           .attr("title", i18next.t('comments.saved'));
                             } else {
@@ -2549,7 +2552,8 @@ function ctUpdateAddImage(codeAddedTo) {
                             }
                         });
 
-                        GM_setValue("cachetur_last_action", Date.now());
+                        try { GM_setValue("cachetur_last_action", Date.now()); } catch (_) {}
+                        return false;
                     });
                 }
 
@@ -2561,8 +2565,8 @@ function ctUpdateAddImage(codeAddedTo) {
                 }
             } else {
                 // Not added → keep only the send icon inside the toolbar on PGC
-                const toolbar = img.parent();
-                toolbar.find('.cachetur-add-comment, .cachetur-set-pri-1, .cachetur-set-pri-2, .cachetur-set-pri-3').remove();
+                const toolbarParent = img.parent();
+                toolbarParent.find('.cachetur-add-comment, .cachetur-set-pri-1, .cachetur-set-pri-2, .cachetur-set-pri-3').remove();
             }
 
             // Do NOT return; geocaching.com branches below should still execute for their pages
@@ -2588,7 +2592,8 @@ function ctUpdateAddImage(codeAddedTo) {
             if (_ctPage === "gc_geocache") {
                 if ($("#cachetur-controls-container .cachetur-add-comment[data-code='" + code + "']").length === 0) {
                     const li = $('<li></li>');
-                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '">' + i18next.t('comments.add') + '</a>');
+                    // Use href="#" to avoid navigation; delegated handler will catch clicks
+                    const commentControl = $('<a href="#" class="cachetur-add-comment" data-code="' + code + '">' + i18next.t('comments.add') + '</a>');
                     li.append(commentControl);
                     $("#cachetur-controls-container").append(li);
                 }
@@ -2600,7 +2605,7 @@ function ctUpdateAddImage(codeAddedTo) {
             } else if (_ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
                 if ($("#cachetur-controls-container .cachetur-add-comment[data-code='" + code + "']").length === 0) {
                     const li = $('<li></li>');
-                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
+                    const commentControl = $('<a href="#" class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
                     li.append(commentControl);
                     $("#cachetur-controls-container").append(li);
                 }
@@ -2611,8 +2616,34 @@ function ctUpdateAddImage(codeAddedTo) {
                 }
             } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
                 if (img.parent().find(".cachetur-add-comment[data-code='" + code + "']").length === 0) {
-                    const commentControl = $('<a href class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
+                    const commentControl = $('<a href="#" class="cachetur-add-comment" data-code="' + code + '"><img src="https://cachetur.no/api/img/cachetur-comment.png" /> ' + i18next.t('comments.add') + ' </a>');
                     img.parent().append(commentControl);
+
+                    // IMPORTANT: bind a direct click handler here (popup may live in another document)
+                    commentControl.on("click", function (evt) {
+                        // Prevent default navigation and stop bubbling to Leaflet
+                        evt.preventDefault();
+                        evt.stopImmediatePropagation();
+
+                        const $link = $(this);
+                        const commentCode = String($link.data("code") || "").toUpperCase();
+                        const tur = $("#cachetur-tur-valg").val();
+
+                        const comment = prompt(i18next.t("comments.description"));
+                        if (comment == null) return false; // User cancelled
+
+                        ctApiCall("planlagt_add_code_comment", { tur: tur, code: commentCode, comment: comment }, function (res) {
+                            const ok = (res === "Ok") || (res && res.ok === true);
+                            $link.html(
+                                '<img src="https://cachetur.no/api/img/cachetur-comment' +
+                                (ok ? '-success' : '-error') + '.png" /> ' +
+                                i18next.t(ok ? "comments.saved" : "comments.error")
+                            );
+                        });
+
+                        try { GM_setValue("cachetur_last_action", Date.now()); } catch (_) {}
+                        return false;
+                    });
                 }
                 if (!$("#cachetur-tur-valg").val().endsWith('T')) {
                     ctCreatePriorityControl(img, code, 1);
@@ -2644,6 +2675,48 @@ function ctUpdateAddImage(codeAddedTo) {
             }
         }
     });
+
+    // ---------- One-time delegated handler for GC comment links (works for same-document popups) ----------
+    // On gc_map, popup may live in a different document; we also bind direct handlers above when creating the link.
+    if (!window.__ctAddCommentBound) {
+        window.__ctAddCommentBound = true;
+
+        $(document)
+            .off("click.cacheturAddComment")
+            .on("click.cacheturAddComment", ".cachetur-add-comment", function (evt) {
+                // Prevent default navigation and stop bubbling to Leaflet
+                evt.preventDefault();
+                evt.stopImmediatePropagation();
+
+                const $link = $(this);
+                const code = String($link.data("code") || "").toUpperCase();
+                const tur  = $("#cachetur-tur-valg").val();
+
+                const comment = prompt(i18next.t("comments.description"));
+                if (comment == null) return false; // User cancelled
+
+                ctApiCall("planlagt_add_code_comment", { tur: tur, code: code, comment: comment }, function (res) {
+                    const ok = (res === "Ok") || (res && res.ok === true);
+
+                    // Visual feedback depending on current GC page
+                    if (_ctPage === "gc_geocache" || _ctPage === "gc_map_new" || _ctPage === "gc_map_live") {
+                        $link.text(i18next.t(ok ? "comments.saved" : "comments.error"));
+                    } else if (_ctPage === "gc_map" || _ctPage === "gc_gctour") {
+                        $link.html(
+                            '<img src="https://cachetur.no/api/img/cachetur-comment' +
+                            (ok ? '-success' : '-error') + '.png" /> ' +
+                            i18next.t(ok ? "comments.saved" : "comments.error")
+                        );
+                    } else {
+                        // Fallback
+                        $link.attr("title", i18next.t(ok ? "comments.saved" : "comments.error"));
+                    }
+                });
+
+                try { GM_setValue("cachetur_last_action", Date.now()); } catch (_) {}
+                return false;
+            });
+    }
 }
 
 function ctCreatePriorityControl(img, code, priority) {
