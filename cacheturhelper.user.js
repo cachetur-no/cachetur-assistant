@@ -379,47 +379,53 @@ if (typeof _ctPage !== 'undefined' && (_ctPage === 'gc_map_new' || _ctPage === '
     });
   }
 
-  // --- robust README parser ---
-  function extractReleaseNotes(mdText, version){
-    try{
-      let txt = String(mdText || "");
-      txt = txt.replace(/^\uFEFF/, "");      // strip BOM
-      txt = txt.replace(/\r\n/g, "\n");      // normalize EOL
+ // --- robust README parser (exact section + date) ---
+function extractReleaseNotes(mdText, version) {
+  try {
+    let txt = String(mdText || "").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
 
-      // Try exact section first
-      const vEsc = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const startRe = new RegExp(`^\\s{0,3}###\\s*Version\\s*${vEsc}\\b.*$`, "mi");
-      let m = startRe.exec(txt);
+    // Work line-by-line to get clean boundaries
+    const lines = txt.split("\n");
 
-      // Fallback to first version block
-      if (!m) {
-        console.debug("[Cachetur/update] Exact section not found for", version, "- falling back to first version block");
-        m = /^\s{0,3}###\s*Version\s*\d[\d.]*.*$/mi.exec(txt);
-        if (!m) return "";
-      }
-      const start = m.index;
-      const after = txt.slice(start + 1);
-      const next  = /\n\s{0,3}###\s*Version\s*\d[\d.]*/mi.exec(after);
-      const end   = next ? (start + 1 + next.index) : txt.length;
+    // Match headings like "##/###/#### Version 3.5.2.4"
+    const escVer   = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const thisHdr  = new RegExp("^\\s{0,3}#{2,6}\\s*Version\\s*" + escVer + "\\b.*$", "i");
+    const anyHdr   = /^\s{0,3}#{2,6}\s*Version\s*\d[\d.]*/i;
 
-      let block = txt.slice(start, end);
-      block = block.replace(/^\s{0,3}###[^\n]*\n?/, ""); // drop heading
+    // Find start of the requested version, else fall back to first "Version ..." section
+    let start = lines.findIndex(l => thisHdr.test(l));
+    if (start === -1) start = lines.findIndex(l => anyHdr.test(l));
+    if (start === -1) return "";
 
-      const lines   = block.split("\n").map(l => l.trim()).filter(Boolean);
-      const bullets = lines.filter(l => /^[-*]\s+/.test(l)).map(l => l.replace(/^[-*]\s+/, ""));
-      if (bullets.length) return "<ul>" + bullets.map(li => "<li>"+escHtml(li)+"</li>").join("") + "</ul>";
+    // Find end at next "Version ..." heading
+    let end = lines.slice(start + 1).findIndex(l => anyHdr.test(l));
+    if (end !== -1) end = start + 1 + end; else end = lines.length;
 
-      // Skip obvious date line and show a short snippet
-      const content = lines.filter((l,idx)=> !(idx===0 && /^[A-Za-z].*\d/.test(l) && !/^[-*]/.test(l)));
-      const snippet = content.slice(0,6).join("\n");
-      return snippet ? "<pre style='white-space:pre-wrap;margin:0'>" + escHtml(snippet) + "</pre>" : "";
-    } catch(e){
-      console.warn("[Cachetur/update] extractReleaseNotes failed:", e);
-      return "";
+    // Content between headings
+    const block = lines.slice(start + 1, end).map(l => l.trim());
+
+    // First non-empty, non-bullet line is treated as the date line
+    const dateLine = block.find(l => l && !/^[-*]\s+/.test(l));
+    const bullets  = block.filter(l => /^[-*]\s+/.test(l)).map(l => l.replace(/^[-*]\s+/, ""));
+
+    // Build HTML (include date if present)
+    let html = "";
+    if (dateLine) html += `<div class="ct-date">${escHtml(dateLine)}</div>`;
+    if (bullets.length) {
+      html += "<ul>" + bullets.map(li => "<li>" + escHtml(li) + "</li>").join("") + "</ul>";
+    } else {
+      // Fallback: show up to 6 lines of plain text if there are no bullet points
+      const snippet = block.filter(Boolean).slice(dateLine ? 1 : 0, 6).join("\n");
+      if (snippet) html += "<pre style='white-space:pre-wrap;margin:0'>" + escHtml(snippet) + "</pre>";
     }
+    return html;
+  } catch (e) {
+    console.warn("[Cachetur/update] extractReleaseNotes failed:", e);
+    return "";
   }
+}
 
-  function ensureToastCss(){
+	function ensureToastCss(){
     if(window.__ctToastCss) return;
     window.__ctToastCss = true;
     GM_addStyle(`
@@ -431,6 +437,7 @@ if (typeof _ctPage !== 'undefined' && (_ctPage === 'gc_map_new' || _ctPage === '
       .ct-toast p{ margin:0 0 8px; color:#cbd5e1; }
       .ct-toast ul{ margin:6px 0 10px 18px; padding:0; }
       .ct-toast li{ margin:4px 0; }
+	  .ct-toast .ct-date { font-size:12px; color:#9ca3af; margin:2px 0 6px; }
       .ct-toast .ct-actions{ display:flex; gap:8px; margin-top:10px; }
       .ct-toast button{ border:0; border-radius:8px; padding:8px 12px; cursor:pointer;
         background:#10b981; color:#001; font-weight:600; }
@@ -3286,3 +3293,4 @@ GM_xmlhttpRequest({
 
 
     }
+
