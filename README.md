@@ -11,18 +11,23 @@ Safari browser is not supported due to restrictions set by Apple
  
 ## Release notes
 
+### Version 3.5.2.4
+Tuesday 19. Aug 2025 02:43
+
+-Fixed bug with add comment function on geocaching.com
+
 ### Version 3.5.2.3
 Saturday 16. Aug 2025 06:13
 
 -Added support for maps generated from the statistics on PGC
--Added handeling of assistant if PGC userscript is beiing used
+-Added handeling of assistant if PGC userscript is being used
 -Added handeling of assistant if GCLH2 is being used
 -Fixed bug where if a cache on PGC map was added to VPGS it couldn’t be added to cachetur
 
 ### Version 3.5.2.2
 Wednesday 13. Aug 2025 23:28
 
-- Fixed Bug that occured ffter adding support for the Geotour map, a similarity with the popup on that map, and the browse map caused the assistant to refresh the page when trying to add a cache from the browse map
+- Fixed Bug that occured after adding support for the Geotour map, a similarity with the popup on that map, and the browse map caused the assistant to refresh the page when trying to add a cache from the browse map
 - Tweaked CSS on trip selector in narrow geocaching.com header's, where the trip list looked empty, due to being to narrow
 
 ### Version 3.5.2.1
