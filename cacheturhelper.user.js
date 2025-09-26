@@ -3,7 +3,7 @@
 // @name:no         Cacheturassistenten
 // @author          cachetur.no, thomfre
 // @namespace       http://cachetur.no/
-// @version         3.5.2.4
+// @version         3.5.2.5
 // @description     Companion script for cachetur.no
 // @description:no  Hjelper deg å legge til cacher i cachetur.no
 // @icon            https://cachetur.net/img/logo_top.png
@@ -130,7 +130,7 @@ function ctDetectPage() {
   if (host === "project-gc.com" || host === "www.project-gc.com") {
     if (path.includes("/user/virtualgps") && !search.includes("map=")) return "pgc_vgps";
     if (path.includes("/livemap/") || path.includes("/tools/"))       return "pgc_map";
-    if (path.includes("/maps/")) return "pgc_map2";
+    if (path.includes("/maps/")|| path.includes("/challenges/")) return "pgc_map2";
 
   }
 
@@ -1820,7 +1820,7 @@ function ctWatchNewMap() {
 function ctInitPGCMap() {
 // Allow both PGC map modes; require a Leaflet-based Tools or Maps page
 const path = (window.location.pathname || "").toLowerCase();
-if ((_ctPage !== "pgc_map" && _ctPage !== "pgc_map2") || !(path.includes("/tools/") || path.includes("/maps/"))) {
+if ((_ctPage !== "pgc_map" && _ctPage !== "pgc_map2") || !(path.includes("/tools/") || path.includes("/maps/") || path.includes("/challenges/"))) {
   return;
 }
     if (window.__ctPGCInitDone) return;
